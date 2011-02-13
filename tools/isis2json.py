@@ -10,7 +10,7 @@
 # by the Free Software Foundation, either version 2.1 of the License, or
 # (at your option) any later version.
 
-# This program is distributed in the hope that it will be useful, 
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
@@ -111,7 +111,7 @@ def iterIsoRecords(iso_file_name, subfields):
     iso.close()
 
 def writeJsonArray(iterRecords, file_name, output, qty, skip, id_tag,
-                   gen_uuid, mongo, mfn, subfields, tagprefix, regtype):
+                   gen_uuid, mongo, mfn, subfields, prefix, constant):
     start = skip
     end = start + qty
     if not mongo:
@@ -156,13 +156,14 @@ def writeJsonArray(iterRecords, file_name, output, qty, skip, id_tag,
                 record['_id'] = unicode(uuid4())
             elif mfn:
                 record['_id'] = record[ISIS_MFN_KEY]
-            if tagprefix:
+            if prefix:
                 for tag in record:
                     if str(tag).isdigit():
-                        record[tagprefix+tag] = record[tag]
+                        record[prefix+tag] = record[tag]
                         del record[tag]
-            if regtype:              
-                record[regtype.split(':')[0]] = regtype.split(':')[1]
+            if constant:
+                constant_key, constant_value = constant.split(':')
+                record[constant_key] = constant_value
             output.write(json.dumps(record).encode('utf-8'))
     if not mongo:
         output.write('\n]')
@@ -208,19 +209,19 @@ if __name__ == '__main__':
         '-u', '--uuid', action='store_true',
         help='generate an "_id" with a random UUID for each record')
     parser.add_argument(
-        '-t', '--tagprefix', type=str, metavar='PREFIX', default='',
-        help='concatenate prefix to numeric field tags (ex. 99 becomes "v99"')
+        '-p', '--prefix', type=str, metavar='PREFIX', default='',
+        help='concatenate prefix to every numeric field tag (ex. 99 becomes "v99")')
     parser.add_argument(
         '-n', '--mfn', action='store_true',
         help='generate an "_id" from the MFN of each record'
              ' (available only for .mst input)')
     parser.add_argument(
-        '-y', '--regtype', type=str, default='',
-        help='Include a field key:value for each register: -r key:value')
+        '-k', '--constant', type=str, metavar='TAG:VALUE', default='',
+        help='Include a constant tag:value in every record (ex. -k type:AS)')
 
     '''
     # TODO: implement this to export large quantities of records to CouchDB
-    parser.add_argument( 
+    parser.add_argument(
         '-r', '--repeat', type=int, default=1,
         help='repeat operation, saving multiple JSON files'
              ' (default=1, use -r 0 to repeat until end of input)')
@@ -237,7 +238,7 @@ if __name__ == '__main__':
     if args.couch:
         args.out.write('{ "docs" : ')
     writeJsonArray(iterRecords, args.file_name, args.out, args.qty, args.skip,
-        args.id, args.uuid, args.mongo, args.mfn, args.subfields, args.tagprefix, args.regtype)
+        args.id, args.uuid, args.mongo, args.mfn, args.subfields, args.prefix, args.constant)
     if args.couch:
         args.out.write('}\n')
     args.out.close()
