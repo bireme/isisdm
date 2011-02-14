@@ -195,6 +195,9 @@ if __name__ == '__main__':
         '-f', '--subfields', action='store_true',
         help='explode each field into a JSON dictionary, with "_" as'
              ' default key, and subfield markers as additional keys')
+    #parser.add_argument(
+    #    '-t', '--type', type=int, metavar='ISIS_JSON_TYPE', default=1,
+    #    help='ISIS-JSON type, sets field structure: 1=string, 2=alist, 3=dict')
     parser.add_argument(
         '-q', '--qty', type=int, default=DEFAULT_QTY,
         help='maximum quantity of records to read (default=ALL)')
