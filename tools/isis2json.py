@@ -137,11 +137,13 @@ def writeJsonArray(iterRecords, file_name, output, qty, skip, id_tag,
                     if ISIS_MFN_KEY in record:
                         msg = msg + (' (mfn=%s)' % record[ISIS_MFN_KEY])
                     raise TypeError(msg % (id_tag, i))
-                else:
-                    if subfields:
-                        id = occurrences[0]['_']
-                    else:
+                else: # ok, we have one and only one id field
+                    if isis_json_type == 1:
                         id = occurrences[0]
+                    elif isis_json_type == 2:
+                        id = occurrences[0][0][1]
+                    elif isis_json_type == 3:
+                        id = occurrences[0]['_']
                     if id in ids:
                         msg = 'duplicate id %s in tag #%s, record %s'
                         if ISIS_MFN_KEY in record:

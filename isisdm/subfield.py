@@ -26,7 +26,11 @@ Subfield parsing
 
     >>> expand('John Tenniel^rillustrator')
     [('_', 'John Tenniel'), ('r', 'illustrator')]
-    
+
+All subfields are stripped of trailing whitespace::
+
+    >>> expand('John Tenniel ^rillustrator ')
+    [('_', 'John Tenniel'), ('r', 'illustrator')]
 
 Subfield keys are case-insensitive, and always converted to lower case::
 
@@ -35,13 +39,13 @@ Subfield keys are case-insensitive, and always converted to lower case::
 
 
 Even if there is no main subfield, the '_' key is returned::
-    
+
     >>> expand('^1one^2two^3three')
     [('_', ''), ('1', 'one'), ('2', 'two'), ('3', 'three')]
-    
+
 ---------------
 Abnormal cases
----------------    
+---------------
 
 Empty field::
 
@@ -49,12 +53,12 @@ Empty field::
     [('_', '')]
 
 Empty subfields::
-    
+
     >>> expand('aa^1^2c') # empty subfield ^1, middle position
     [('_', 'aa'), ('1', ''), ('2', 'c')]
     >>> expand('aa^1b^2') # empty subfield ^2, last position
     [('_', 'aa'), ('1', 'b'), ('2', '')]
-    
+
 Subfield keys are limited to a-z and 0-9. Invalid keys are ignored,
 and the subfield delimiter is appended to the previous subfield::
 
@@ -68,7 +72,7 @@ and the subfield delimiter is appended to the previous subfield::
 To reduce the damage from duplicate delimiters in the middle of the
 field, a space is added after each pair. Otherwise the example below
 would seem to have an ^i subfield with the content "llustrator".
-Keeping the duplicate delimiters together makes it easier to find 
+Keeping the duplicate delimiters together makes it easier to find
 and fix these problems later::
 
     >>> expand('John Tenniel^^illustrator')
@@ -97,8 +101,8 @@ MAIN_SUBFIELD_KEY = '_'
 SUBFIELD_MARKER_RE = re.compile(r'\^([a-z0-9])', re.IGNORECASE)
 
 def expand(content, subkeys=None):
-    ''' Parse a field into an association list of keys and subfields 
-    
+    ''' Parse a field into an association list of keys and subfields
+
         >>> expand('zero^1one^2two^3three')
         [('_', 'zero'), ('1', 'one'), ('2', 'two'), ('3', 'three')]
 
@@ -116,7 +120,7 @@ def expand(content, subkeys=None):
     while True:
         found = regex.search(content, start)
         if found is None: break
-        parts.append((key, content[start:found.start()]))
+        parts.append((key, content[start:found.start()].rstrip()))
         key = found.group(1).lower()
         start = found.end()
     parts.append((key, content[start:].rstrip()))
@@ -128,5 +132,5 @@ def test():
 
 if __name__=='__main__':
     test()
-    
+
 
