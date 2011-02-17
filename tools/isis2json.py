@@ -41,7 +41,7 @@ ISIS_ACTIVE_KEY = 'active'
 SUBFIELD_DELIMITER = '^'
 INPUT_ENCODING = 'cp1252'
 
-def iterMstRecords(master_file_name, subfields):
+def iterMstRecords(master_file_name, isis_json_type):
     try:
         from br.bireme.zeus.master import MasterFactory, Record
     except ImportError:
@@ -59,7 +59,7 @@ def iterMstRecords(master_file_name, subfields):
         for field in record.getFields():
             field_key = str(field.getId())
             field_occurrences = fields.setdefault(field_key,[])
-            if subfields:
+            if isis_json_type == 3:
                 content = {}
                 for subfield in field.getSubfields():
                     subfield_key = subfield.getId()
@@ -69,7 +69,7 @@ def iterMstRecords(master_file_name, subfields):
                         subfield_occurrences = content.setdefault(subfield_key,[])
                         subfield_occurrences.append(subfield.getContent())
                 field_occurrences.append(content)
-            else:
+            elif isis_json_type == 1:
                 content = []
                 for subfield in field.getSubfields():
                     subfield_key = subfield.getId()
@@ -79,22 +79,14 @@ def iterMstRecords(master_file_name, subfields):
                         content.append(SUBFIELD_DELIMITER+subfield_key+
                                        subfield.getContent())
                 field_occurrences.append(''.join(content))
+            else:
+                raise NotImplementedError('ISIS-JSON type %s conversion not yet implemented for .mst input' % isis_json_type)
         yield fields
     mst.close()
 
-def iterIsoRecords(iso_file_name, subfields):
+def iterIsoRecords(iso_file_name, isis_json_type):
     from iso2709 import IsoFile
-    def parse(field):
-        content = field.value.decode(INPUT_ENCODING,'replace')
-        parts = content.split(SUBFIELD_DELIMITER)
-        subs = {}
-        main = parts.pop(0)
-        if len(main) > 0:
-            subs['_'] = main
-        for part in parts:
-            prefix = part[0]
-            subs[prefix] = part[1:]
-        return subs
+    from subfield import expand
 
     iso = IsoFile(iso_file_name)
     for record in iso:
@@ -102,16 +94,21 @@ def iterIsoRecords(iso_file_name, subfields):
         for field in record.directory:
             field_key = str(int(field.tag)) # remove leading zeroes
             field_occurrences = fields.setdefault(field_key,[])
-            if subfields:
-                field_occurrences.append(parse(field))
+            content = field.value.decode(INPUT_ENCODING,'replace')
+            if isis_json_type == 1:
+                field_occurrences.append(content)
+            elif isis_json_type == 2:
+                field_occurrences.append(expand(content))
+            elif isis_json_type == 3:
+                field_occurrences.append(dict(expand(content)))
             else:
-                field_occurrences.append(field.value.decode(INPUT_ENCODING,'replace'))
+                raise NotImplementedError('ISIS-JSON type %s conversion not yet implemented for .iso input' % isis_json_type)
 
         yield fields
     iso.close()
 
 def writeJsonArray(iterRecords, file_name, output, qty, skip, id_tag,
-                   gen_uuid, mongo, mfn, subfields, prefix, constant):
+                   gen_uuid, mongo, mfn, isis_json_type, prefix, constant):
     start = skip
     end = start + qty
     if not mongo:
@@ -121,7 +118,7 @@ def writeJsonArray(iterRecords, file_name, output, qty, skip, id_tag,
         ids = set()
     else:
         id_tag = ''
-    for i, record in enumerate(iterRecords(file_name, subfields)):
+    for i, record in enumerate(iterRecords(file_name, isis_json_type)):
         if i >= end:
             break
         if i > start and not mongo:
@@ -192,12 +189,8 @@ if __name__ == '__main__':
         help='output individual records as separate JSON dictionaries,'
              ' one per line for bulk insert to MongoDB via mongoimport utility')
     parser.add_argument(
-        '-f', '--subfields', action='store_true',
-        help='explode each field into a JSON dictionary, with "_" as'
-             ' default key, and subfield markers as additional keys')
-    #parser.add_argument(
-    #    '-t', '--type', type=int, metavar='ISIS_JSON_TYPE', default=1,
-    #    help='ISIS-JSON type, sets field structure: 1=string, 2=alist, 3=dict')
+        '-t', '--type', type=int, metavar='ISIS_JSON_TYPE', default=1,
+        help='ISIS-JSON type, sets field structure: 1=string, 2=alist, 3=dict')
     parser.add_argument(
         '-q', '--qty', type=int, default=DEFAULT_QTY,
         help='maximum quantity of records to read (default=ALL)')
@@ -241,7 +234,7 @@ if __name__ == '__main__':
     if args.couch:
         args.out.write('{ "docs" : ')
     writeJsonArray(iterRecords, args.file_name, args.out, args.qty, args.skip,
-        args.id, args.uuid, args.mongo, args.mfn, args.subfields, args.prefix, args.constant)
+        args.id, args.uuid, args.mongo, args.mfn, args.type, args.prefix, args.constant)
     if args.couch:
         args.out.write('}\n')
     args.out.close()

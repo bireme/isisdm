@@ -1,0 +1,25 @@
+f2,cl4,m(3175,-3175)
+"one (1):",tab(3175),v1/
+"two (2):",tab(3175),v2/
+(if p(v4) then 'four (4):',tab(3175),v4/fi)
+"five (5):",tab(3175),v5/
+"six (6):",tab(3175),v6/
+"eight (8):",tab(3175),v8/
+(if p(v10) then 'ten (10):',tab(3175),v10/fi)
+(if p(v12) then 'twelve (12):',tab(3175),v12/fi)
+"thirty (30):",tab(3175),v30/
+"thirty-one (31):",tab(3175),v31/
+"thirty-two (32):",tab(3175),v32/
+"thirty-five (35):",tab(3175),v35/
+"forty (40):",tab(3175),v40/
+(if p(v41) then 'forty-one (41):',tab(3175),v41/fi)
+"sixty-four (64):",tab(3175),v64/
+"sixty-five (65):",tab(3175),v65/
+"sixty-seven (67):",tab(3175),v67/
+(if p(v83) then 'eighty-three (83):',tab(3175),v83/fi)
+"eighty-four (84):",tab(3175),v84/
+"ninety-one (91):",tab(3175),v91/
+(if p(v92) then 'ninety-two (92):',tab(3175),v92/fi)
+"ninety-eight (98):",tab(3175),v98/
+"one-thirteen (113):",tab(3175),v113/
+"seven-seven-eight (778):",tab(3175),v778/
