@@ -30,14 +30,14 @@ Object-document mapper
 
 Instantiating a Book object::
 
-    >>> livro1 = Book(title='Godel, Escher, Bach',
+    >>> book1 = Book(title='Godel, Escher, Bach',
     ...               authors=[u'Hofstadter, Douglas'],    
     ...               pages=777)
         
     
 Manipulating its attributes::
 
-    >>> livro1.title        
+    >>> book1.title
     u'Godel, Escher, Bach'
 """
 from ordered import OrderedProperty, OrderedModel
