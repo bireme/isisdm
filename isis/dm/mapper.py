@@ -28,9 +28,8 @@ Object-document mapper
     ...
     
     >>> def colon_validator(node, value):
-    ...     import re
     ...     for author in value:
-    ...         if re.search('(, )', author) is None:
+    ...         if ',' not in author:
     ...             raise BaseException, "Authors's name must be in 'LastName, FirstName' format"
     
     >>> class Book(Document):
@@ -42,11 +41,11 @@ Object-document mapper
 Instantiating a Book object::
 
     >>> book1 = Book(title='Godel, Escher, Bach',
-    ...               authors=[u'Hofstadter, Douglas'],    
+    ...               authors=(u'Hofstadter, Douglas',),    
     ...               pages='777')
     ...
     >>> book2 = Book(title='Semantic Web') 
-    >>> book2.authors = [u'Breitman, Karin K.', u'Casanova, Marco Antonio', u'Truzkowski, Walter']
+    >>> book2.authors = (u'Breitman, Karin K.', u'Casanova, Marco Antonio', u'Truzkowski, Walter')
             
 Manipulating its attributes::
 
@@ -56,7 +55,7 @@ Manipulating its attributes::
     >>> book1.authors[0]
     u'Hofstadter, Douglas'
     
-    >>> book1.authors = [u'Hofstadter Douglas'] #DOCTEST: +ELLIPSIS
+    >>> book1.authors = (u'Hofstadter Douglas',)
     Traceback (most recent call last):
     ...
     BaseException: Authors's name must be in 'LastName, FirstName' format
@@ -64,10 +63,14 @@ Manipulating its attributes::
     >>> book1.authors[0]
     u'Hofstadter, Douglas'
     
-FIXME: validators don't work correctly when appending data
-    >>> book1.authors.append(u'Daiana Rose')    
+    >>> book1.authors += (u'Daiana Rose',)
+    Traceback (most recent call last):
+    ...
+    BaseException: Authors's name must be in 'LastName, FirstName' format
+    
+    >>> book1.authors += (u'Rose, Daiana',)
     >>> book1.authors
-    [u'Hofstadter, Douglas', u'Daiana Rose']
+    (u'Hofstadter, Douglas', u'Rose, Daiana')
     
 """
 from ordered import OrderedProperty, OrderedModel
@@ -133,7 +136,7 @@ class TextProperty(CheckedProperty):
     
     def __set__(self, instance, value):
         if not isinstance(value, basestring):
-            raise Invalid('%r value must be unicode type instance' % self.name)
+            raise Invalid('%r value must be unicode or str instance' % self.name)
         value = unicode(value)
         if self.required and len(value.rstrip()) == 0:
             raise Invalid('%r value cannot be empty' % self.name)
@@ -143,8 +146,8 @@ class TextProperty(CheckedProperty):
 class MultiTextProperty(CheckedProperty):
     
     def __set__(self, instance, value):
-        if not isinstance(value, (list, tuple, set)):
-            raise TypeError('MultiText value must be list, tuple or set')        
+        if not isinstance(value, tuple):
+            raise TypeError('MultiText value must be tuple')
         super(MultiTextProperty, self).__set__(instance, value)
 
 
