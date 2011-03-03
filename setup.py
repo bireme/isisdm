@@ -5,7 +5,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
-setup(name='isis.dm', version='0.0.0',
+setup(name='isisdm', version='0.0.0',
       packages=find_packages(),
       long_description=README + "\n\n" + CHANGES,
       namespace_packages=['isis'],
