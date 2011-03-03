@@ -226,7 +226,7 @@ if __name__ == '__main__':
     '''
     # parse the command line
     args = parser.parse_args()
-    if args.file_name.endswith('.mst'):
+    if args.file_name.lower().endswith('.mst'):
         iterRecords = iterMstRecords
     else:
         if args.mfn:

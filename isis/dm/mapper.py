@@ -22,27 +22,60 @@
 ----------------------
 Object-document mapper
 ----------------------
+    >>> def text_validator(node, value):
+    ...     if value.startswith('Banana'):
+    ...         raise BaseException, "You can't start a text with 'Banana'"
+    ...
+    
+    >>> def colon_validator(node, value):
+    ...     for author in value:
+    ...         if ',' not in author:
+    ...             raise BaseException, "Authors's name must be in 'LastName, FirstName' format"
+    
     >>> class Book(Document):
-    ...     title = TextField(required=True)
-    ...     authors = TextField(required=True, repeatable=True)
-    ...     pages = NumberField()
-
+    ...     title = TextProperty(required=True, validator=text_validator)
+    ...     authors = MultiTextProperty(required=False, validator=colon_validator)
+    ...     pages = TextProperty()
+    ...     
 
 Instantiating a Book object::
 
-    >>> livro1 = Book(title='Godel, Escher, Bach',
-    ...               authors=[u'Hofstadter, Douglas'],    
-    ...               pages=777)
-        
-    
+    >>> book1 = Book(title='Godel, Escher, Bach',
+    ...               authors=(u'Hofstadter, Douglas',),    
+    ...               pages='777')
+    ...
+    >>> book2 = Book(title='Semantic Web') 
+    >>> book2.authors = (u'Breitman, Karin K.', u'Casanova, Marco Antonio', u'Truzkowski, Walter')
+            
 Manipulating its attributes::
 
-    >>> livro1.title        
+    >>> book1.title        
     u'Godel, Escher, Bach'
+    
+    >>> book1.authors[0]
+    u'Hofstadter, Douglas'
+    
+    >>> book1.authors = (u'Hofstadter Douglas',)
+    Traceback (most recent call last):
+    ...
+    BaseException: Authors's name must be in 'LastName, FirstName' format
+    
+    >>> book1.authors[0]
+    u'Hofstadter, Douglas'
+    
+    >>> book1.authors += (u'Daiana Rose',)
+    Traceback (most recent call last):
+    ...
+    BaseException: Authors's name must be in 'LastName, FirstName' format
+    
+    >>> book1.authors += (u'Rose, Daiana',)
+    >>> book1.authors
+    (u'Hofstadter, Douglas', u'Rose, Daiana')
+    
 """
 from ordered import OrderedProperty, OrderedModel
 
-__all__ = ['Document', 'TextField', 'NumberField']
+__all__ = ['Document', 'TextProperty', 'MultiTextProperty']
 
 
 class Document(OrderedModel):
@@ -75,12 +108,11 @@ class Invalid(Exception):
         
 class CheckedProperty(OrderedProperty):
 
-    def __init__(self, required=False, validator=None, choices=None, repeatable=False):
+    def __init__(self, required=False, validator=None, choices=None):
         super(CheckedProperty, self).__init__()
         self.required = required
         self.validator = validator
-        self.choices = choices if choices else []
-        self.repeatable = repeatable
+        self.choices = choices if choices else []        
 
     def __set__(self, instance, value):
         if self.validator:
@@ -100,25 +132,26 @@ class CheckedProperty(OrderedProperty):
         return self.required and getattr(instance, self.name, None) is None
 
         
-class TextField(CheckedProperty):
+class TextProperty(CheckedProperty):
     
     def __set__(self, instance, value):
         if not isinstance(value, basestring):
-            raise Invalid('%r value must be unicode type instance' % self.name)
+            raise Invalid('%r value must be unicode or str instance' % self.name)
         value = unicode(value)
         if self.required and len(value.rstrip()) == 0:
             raise Invalid('%r value cannot be empty' % self.name)
-        super(TextField, self).__set__(instance, value)
+        super(TextProperty, self).__set__(instance, value)
 
 
-class NumberField(CheckedProperty):
-
+class MultiTextProperty(CheckedProperty):
+    
     def __set__(self, instance, value):
-        if not isinstance(value, (int, long, float)):
-            raise TypeError('Number value must be int, long or float')
-        super(NumberField, self).__set__(instance, value)
+        if not isinstance(value, tuple):
+            raise TypeError('MultiText value must be tuple')
+        super(MultiTextProperty, self).__set__(instance, value)
 
 
 if __name__ == '__main__':    
     import doctest
     doctest.testmod()
+    
