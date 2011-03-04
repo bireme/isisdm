@@ -33,20 +33,25 @@ Object-document mapper
     ...             raise BaseException, "Authors's name must be in 'LastName, FirstName' format"
     
     >>> class Book(Document):
-    ...     title = TextProperty(required=True, validator=text_validator)
-    ...     authors = MultiTextProperty(required=False, validator=colon_validator)
-    ...     pages = TextProperty()
+    ...     title = TextProperty(required=True, validator=text_validator)    
+    ...     authors = MultiTextProperty(required=False, validator=colon_validator)    
+    ...     pages = TextProperty()    
     ...     
+    >>> class Book2(Document):
+    ...     title = TextProperty(required=True, validator=text_validator)    
+    ...     authors = comp = CompositeTextProperty(required=False, subkeys='fl') 
+    ...
 
 Instantiating a Book object::
 
     >>> book1 = Book(title='Godel, Escher, Bach',
-    ...               authors=(u'Hofstadter, Douglas',),    
+    ...               authors=(u'Hofstadter, Douglas',),
     ...               pages='777')
     ...
-    >>> book2 = Book(title='Semantic Web') 
-    >>> book2.authors = (u'Breitman, Karin K.', u'Casanova, Marco Antonio', u'Truzkowski, Walter')
-            
+    >>> book2 = Book2(title='Godel, Escher, Bach',
+    ...               authors=u'^lHofstadter^fDouglas')
+    ...
+
 Manipulating its attributes::
 
     >>> book1.title        
@@ -72,8 +77,20 @@ Manipulating its attributes::
     >>> book1.authors
     (u'Hofstadter, Douglas', u'Rose, Daiana')
     
+    >>> print book2.authors
+    [('_', u''), (u'l', u'Hofstadter'), (u'f', u'Douglas')]
+    
+    >>> book2.authors['f']
+    u'Douglas'
+    
+    >>> book2.authors['j']
+    Traceback (most recent call last):
+    ...
+    KeyError: 'j'
+    
 """
 from ordered import OrderedProperty, OrderedModel
+from subfield import CompositeString
 
 __all__ = ['Document', 'TextProperty', 'MultiTextProperty']
 
@@ -112,7 +129,7 @@ class CheckedProperty(OrderedProperty):
         super(CheckedProperty, self).__init__()
         self.required = required
         self.validator = validator
-        self.choices = choices if choices else []        
+        self.choices = choices if choices else []
 
     def __set__(self, instance, value):
         if self.validator:
@@ -151,7 +168,21 @@ class MultiTextProperty(CheckedProperty):
         super(MultiTextProperty, self).__set__(instance, value)
 
 
-if __name__ == '__main__':    
+class CompositeTextProperty(CheckedProperty):
+    
+    def __init__(self, subkeys=None, **kwargs):
+        super(CompositeTextProperty, self).__init__(**kwargs)
+        self.subkeys = subkeys
+    
+    def __set__(self, instance, value):
+        if not isinstance(value, basestring):
+            raise Invalid('%r value must be unicode or str instance' % self.name)
+                
+        composite_text = CompositeString(value, self.subkeys)
+        super(CompositeTextProperty, self).__set__(instance, composite_text)
+    
+
+if __name__ == '__main__':
     import doctest
     doctest.testmod()
     

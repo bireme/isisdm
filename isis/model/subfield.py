@@ -99,6 +99,7 @@ import re
 
 MAIN_SUBFIELD_KEY = '_'
 SUBFIELD_MARKER_RE = re.compile(r'\^([a-z0-9])', re.IGNORECASE)
+DEFAULT_ENCODING = u'utf-8'
 
 def expand(content, subkeys=None):
     ''' Parse a field into an association list of keys and subfields
@@ -125,6 +126,39 @@ def expand(content, subkeys=None):
         start = found.end()
     parts.append((key, content[start:].rstrip()))
     return parts
+
+
+class CompositeString(object):
+    ''' Represent an Isis field, with subfields, using
+        Python native datastructures
+        
+        >>> pythonic_author = CompositeString('John Tenniel^xillustrator',
+        ...                                   subkeys='x')
+        >>> print pythonic_author
+        [('_', u'John Tenniel'), (u'x', u'illustrator')]
+        
+    '''
+    
+    def __init__(self, isis_string, subkeys=None, encoding=DEFAULT_ENCODING):
+        if not isinstance(isis_string, basestring):
+            raise Invalid('%r value must be unicode or str instance' % isis_string)
+            
+        isis_string = isis_string.decode(encoding)
+        self.expanded = expand(isis_string, subkeys)
+
+    def __getitem__(self, key):
+        for subfield in self.expanded:
+            if subfield[0] == key:
+                return subfield[1]
+        else:
+            raise KeyError(key)
+            
+    def __unicode__(self):
+        return unicode(self.expanded)
+    
+    def __str__(self):
+        return str(self.expanded)
+
 
 def test():
     import doctest
