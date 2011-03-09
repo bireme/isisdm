@@ -22,7 +22,7 @@ Object-document mapper
     ...     
     >>> class Book2(Document):
     ...     title = TextProperty(required=True, validator=text_validator)    
-    ...     authors = comp = CompositeTextProperty(required=False, subkeys='fl') 
+    ...     authors = CompositeTextProperty(required=False, subkeys='fl') 
     ...
     >>> class Book3(Document):
     ...     title = TextProperty(required=True, validator=text_validator)    
@@ -93,9 +93,9 @@ Manipulating its attributes::
     Pollice
     Selkov
 """
-from isis.model.mapper import Document
-from isis.model.mapper import TextProperty, MultiTextProperty
-from isis.model.mapper import CompositeTextProperty, MultiCompositeTextProperty
+from isis.model import Document
+from isis.model import TextProperty, MultiTextProperty
+from isis.model import CompositeTextProperty, MultiCompositeTextProperty
 
 def test():
     import doctest

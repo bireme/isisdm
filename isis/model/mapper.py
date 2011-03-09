@@ -18,15 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from ordered import OrderedProperty, OrderedModel
-from isis.model.subfield import CompositeString
-
-__all__ = ['Document',
-           'TextProperty',
-           'MultiTextProperty',
-           'CompositeTextProperty',
-           'MultiCompositeTextProperty',
-]
+from .ordered import OrderedProperty, OrderedModel
+from .subfield import CompositeString
 
 
 class Document(OrderedModel):
