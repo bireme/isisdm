@@ -24,6 +24,10 @@ Object-document mapper
     ...     title = TextProperty(required=True, validator=text_validator)    
     ...     authors = comp = CompositeTextProperty(required=False, subkeys='fl') 
     ...
+    >>> class Book3(Document):
+    ...     title = TextProperty(required=True, validator=text_validator)    
+    ...     authors = MultiCompositeTextProperty(required=False, subkeys='fl') 
+    ...
 
 Instantiating a Book object::
 
@@ -33,6 +37,11 @@ Instantiating a Book object::
     ...
     >>> book2 = Book2(title='Godel, Escher, Bach',
     ...               authors=u'^lHofstadter^fDouglas')
+    ...
+    >>> book3 = Book3(title='Algorithms in a nutshell',
+    ...               authors=(u'^lHeineman^fGeorge T.',
+    ...                        u'^lPollice^fGary',
+    ...                        u'^lSelkov^fStanley'))
     ...
 
 Manipulating its attributes::
@@ -70,10 +79,23 @@ Manipulating its attributes::
     Traceback (most recent call last):
     ...
     KeyError: 'j'
+
+    >>> book3.authors[0]['f']
+    u'George T.'
     
+    >>> book3.authors[0]['j']
+    Traceback (most recent call last):
+    ...
+    KeyError: 'j'
+    
+    >>> for i in book3.authors: print i['l']
+    Heineman
+    Pollice
+    Selkov
 """
 from isis.model.mapper import Document
-from isis.model.mapper import TextProperty, MultiTextProperty, CompositeTextProperty
+from isis.model.mapper import TextProperty, MultiTextProperty
+from isis.model.mapper import CompositeTextProperty, MultiCompositeTextProperty
 
 def test():
     import doctest

@@ -21,7 +21,12 @@
 from ordered import OrderedProperty, OrderedModel
 from isis.model.subfield import CompositeString
 
-__all__ = ['Document', 'TextProperty', 'MultiTextProperty', 'CompositeTextProperty']
+__all__ = ['Document',
+           'TextProperty',
+           'MultiTextProperty',
+           'CompositeTextProperty',
+           'MultiCompositeTextProperty',
+]
 
 
 class Document(OrderedModel):
@@ -110,6 +115,23 @@ class CompositeTextProperty(CheckedProperty):
         composite_text = CompositeString(value, self.subkeys)
         super(CompositeTextProperty, self).__set__(instance, composite_text)
     
+    
+class MultiCompositeTextProperty(CheckedProperty):
+    
+    def __init__(self, subkeys=None, **kwargs):
+        super(MultiCompositeTextProperty, self).__init__(**kwargs)
+        self.subkeys = subkeys
+    
+    def __set__(self, instance, value):
+        if not isinstance(value, tuple):
+            raise TypeError('MultiCompositeText value must be tuple')
+        
+        composite_texts = []
+        for raw_composite_text in value:
+            composite_texts.append(CompositeString(raw_composite_text, self.subkeys))
+            
+        super(MultiCompositeTextProperty, self).__set__(instance, tuple(composite_texts))
+
 
 if __name__ == '__main__':
     import doctest
