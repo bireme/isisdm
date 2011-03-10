@@ -117,12 +117,9 @@ class MultiCompositeTextProperty(CheckedProperty):
     def __set__(self, instance, value):
         if not isinstance(value, tuple):
             raise TypeError('MultiCompositeText value must be tuple')
-        
-        composite_texts = []
-        for raw_composite_text in value:
-            composite_texts.append(CompositeString(raw_composite_text, self.subkeys))
-            
-        super(MultiCompositeTextProperty, self).__set__(instance, tuple(composite_texts))
+                
+        composite_texts = tuple(CompositeString(raw_composite_text, self.subkeys) for raw_composite_text in value)                    
+        super(MultiCompositeTextProperty, self).__set__(instance, composite_texts)
 
 
 class ReferenceProperty(CheckedProperty):
