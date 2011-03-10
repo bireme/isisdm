@@ -36,10 +36,9 @@ class Document(OrderedModel):
                 for prop in self.__class__)
 
     def validate(self):
-        for prop in self:
+        for prop in self:            
             descriptor = self.__class__.__getattribute__(self.__class__, prop)
-            descriptor.validate(self, getattr(self, prop, None))
-
+            descriptor.validate(self, getattr(self, prop, None))            
 
 class Invalid(Exception):
     ''' TODO: study colander.Invalid exception '''
@@ -126,6 +125,19 @@ class MultiCompositeTextProperty(CheckedProperty):
         super(MultiCompositeTextProperty, self).__set__(instance, tuple(composite_texts))
 
 
+class ReferenceProperty(CheckedProperty):
+    
+    def __init__(self, ref_type, **kwargs):
+        super(ReferenceProperty, self).__init__(**kwargs)
+        self.__ref_type = ref_type        
+        
+    def __set__(self, instance, value):
+        if not isinstance(value, self.__ref_type):
+            raise TypeError('Reference value must be %s' % self.__ref_type)
+        
+        super(ReferenceProperty, self).__set__(instance, value)
+    
+    
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

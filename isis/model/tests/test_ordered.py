@@ -46,9 +46,22 @@ metaclasse, é possível preservar esta ordem.
     isbn    : 9781234567890
     autores : [u'Carroll', u'Tenniel']
     
+    
+    
 Os descritores têm um atributo `order` que é inicializado com um contador da 
 classe `OrderedProperty` incrementado a cada nova instância. A metaclasse usa
 este atributo `order` para ordenar uma lista com os nomes dos campos.
+
+    >>> class Bicicleta(OrderedModel):
+    ...     rodas = OrderedProperty()
+    ...     aro = OrderedProperty()
+    ...     cor = OrderedProperty()
+    ...
+    >>> bike = Bicicleta()
+    >>> bike.rodas = 2
+    >>> bike.aro = 26
+    >>> bike.cor = u'preto'
+    ...
 
 """
 from isis.model.ordered import OrderedModel, OrderedProperty

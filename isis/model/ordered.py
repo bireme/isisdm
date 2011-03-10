@@ -40,13 +40,13 @@ class OrderedProperty(object):
         return '<%s %s>' % (self.__class__.__name__, self.name)
 
 class OrderedMeta(type):
-    def __new__(cls, name, bases, dict):
+    def __new__(cls, name, bases, dict):        
         props = []
         for key, attr in dict.items():
             if isinstance(attr, OrderedProperty):
                 attr.name = key
                 props.append(attr)
-        cls._ordered_prop_keys = sorted(props, key=attrgetter('order'))
+        dict['_ordered_prop_keys'] = sorted(props, key=attrgetter('order'))
         return type.__new__(cls, name, bases, dict)
         
     def __iter__(self):

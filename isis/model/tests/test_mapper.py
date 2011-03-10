@@ -13,20 +13,39 @@ Object-document mapper
     >>> def colon_validator(node, value):
     ...     for author in value:
     ...         if ',' not in author:
-    ...             raise BaseException, "Authors's name must be in 'LastName, FirstName' format"
+    ...             raise BaseException, "Authors name must be in 'LastName, FirstName' format"
+    
+    >>> def is_number(node, value):
+    ...     if not value.isdigit():
+    ...         raise ValueError, "Value must be Integer"
+    ...
     
     >>> class Book(Document):
     ...     title = TextProperty(required=True, validator=text_validator)    
     ...     authors = MultiTextProperty(required=False, validator=colon_validator)    
     ...     pages = TextProperty()    
     ...     
-    >>> class Book2(Document):
+    >>> class Article(Document):
     ...     title = TextProperty(required=True, validator=text_validator)    
-    ...     authors = CompositeTextProperty(required=False, subkeys='fl') 
+    ...     authors = CompositeTextProperty(required=False, subkeys='fl')
+    ...     publisher = TextProperty(required=True, validator=text_validator)
     ...
-    >>> class Book3(Document):
+    >>> class Magazine(Document):
+    ...     title = TextProperty(required=True, validator=text_validator)    
+    ...     authors = MultiCompositeTextProperty(required=False, subkeys='fl')
+    ...     pages = TextProperty(validator=is_number)
+    ...
+    
+Using ReferenceProperty
+    
+    >>> class Collection(Document):
+    ...     title = TextProperty(required=True, validator=text_validator)
+    ...     publisher = TextProperty(required=True, validator=text_validator)    
+    ...
+    >>> class BookWithinCollection(Document):
     ...     title = TextProperty(required=True, validator=text_validator)    
     ...     authors = MultiCompositeTextProperty(required=False, subkeys='fl') 
+    ...     collection = ReferenceProperty(Collection)
     ...
 
 Instantiating a Book object::
@@ -35,13 +54,21 @@ Instantiating a Book object::
     ...               authors=(u'Hofstadter, Douglas',),
     ...               pages='777')
     ...
-    >>> book2 = Book2(title='Godel, Escher, Bach',
-    ...               authors=u'^lHofstadter^fDouglas')
+    >>> article1 = Article(title='Too Soon To Tell: Essays for the End of The Computer Revolution',
+    ...               authors=u'^lGrier^fDavid',
+    ...               publisher=u'IEEE Computer Society')
     ...
-    >>> book3 = Book3(title='Algorithms in a nutshell',
+    >>> magazine1 = Magazine(title='Algorithms in a nutshell',
+    ...               authors=(u'^lGreene^fLewis Joel',
+    ...                        u'^lRodrigues^fJose Antunes',
+    ...                        u'^lCalixto^fJoao Batista'))
+    ...
+    >>> book2 = BookWithinCollection(title='Ninar songs',
     ...               authors=(u'^lHeineman^fGeorge T.',
     ...                        u'^lPollice^fGary',
-    ...                        u'^lSelkov^fStanley'))
+    ...                        u'^lSelkov^fStanley'),
+    ...               collection=Collection(title=u'Pragmatic Book Shelf',
+    ...                                     publisher=u'PragProg'))
     ...
 
 Manipulating its attributes::
@@ -55,7 +82,7 @@ Manipulating its attributes::
     >>> book1.authors = (u'Hofstadter Douglas',)
     Traceback (most recent call last):
     ...
-    BaseException: Authors's name must be in 'LastName, FirstName' format
+    BaseException: Authors name must be in 'LastName, FirstName' format
     
     >>> book1.authors[0]
     u'Hofstadter, Douglas'
@@ -63,39 +90,47 @@ Manipulating its attributes::
     >>> book1.authors += (u'Daiana Rose',)
     Traceback (most recent call last):
     ...
-    BaseException: Authors's name must be in 'LastName, FirstName' format
+    BaseException: Authors name must be in 'LastName, FirstName' format
     
     >>> book1.authors += (u'Rose, Daiana',)
     >>> book1.authors
     (u'Hofstadter, Douglas', u'Rose, Daiana')
     
-    >>> print book2.authors
-    ^lHofstadter^fDouglas
+    >>> print article1.authors
+    ^lGrier^fDavid
     
-    >>> book2.authors['f']
-    u'Douglas'
+    >>> article1.authors['f']
+    u'David'
     
-    >>> book2.authors['j']
+    >>> article1.authors['j']
     Traceback (most recent call last):
     ...
     KeyError: 'j'
 
-    >>> book3.authors[0]['f']
-    u'George T.'
+    >>> magazine1.authors[0]['f']
+    u'Lewis Joel'
     
-    >>> book3.authors[0]['j']
+    >>> magazine1.authors[0]['j']
     Traceback (most recent call last):
     ...
     KeyError: 'j'
     
-    >>> for i in book3.authors: print i['l']
-    Heineman
-    Pollice
-    Selkov
+    >>> for i in magazine1.authors: print i['l']
+    Greene
+    Rodrigues
+    Calixto
+    
+    >>> book2.collection.title
+    u'Pragmatic Book Shelf'
+    >>> book2.collection = tuple('abcdef')
+    Traceback (most recent call last):
+    ...
+    TypeError: Reference value must be <class '__main__.Collection'>
+
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty
-from isis.model import CompositeTextProperty, MultiCompositeTextProperty
+from isis.model import CompositeTextProperty, MultiCompositeTextProperty, ReferenceProperty
 
 def test():
     import doctest
