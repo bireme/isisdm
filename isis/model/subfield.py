@@ -75,12 +75,19 @@ class CompositeString(object):
                 return subfield[1]
         else:
             raise KeyError(key)
-            
+    
+    def __iter__(self):
+        return (subfield[0] for subfield in self.__expanded)
+        
+    def items(self):
+        return self.__expanded
+    
     def __unicode__(self):
         return self.__isis_raw
     
     def __str__(self):
         return str(self.__isis_raw)
+
 
 
 def test():

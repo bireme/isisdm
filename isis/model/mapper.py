@@ -20,7 +20,7 @@
 
 from .ordered import OrderedProperty, OrderedModel
 from .subfield import CompositeString
-
+import json
 
 class Document(OrderedModel):
 
@@ -38,7 +38,10 @@ class Document(OrderedModel):
     def validate(self):
         for prop in self:            
             descriptor = self.__class__.__getattribute__(self.__class__, prop)
-            descriptor.validate(self, getattr(self, prop, None))            
+            descriptor.validate(self, getattr(self, prop, None))
+            
+    def serialize(self):
+        return json.dumps(dict(self.iteritems()))
 
 class Invalid(Exception):
     ''' TODO: study colander.Invalid exception '''

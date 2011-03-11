@@ -78,17 +78,28 @@ are expanded::
 ---------------------
 CompositeString tests
 ---------------------
-    >>> author = CompositeString('John Tenniel^xillustrator',
-    ...                          subkeys='x')
+    >>> author = CompositeString('John Tenniel^rillustrator',
+    ...                          subkeys='r')
     
     >>> unicode(author)
-    u'John Tenniel^xillustrator'
+    u'John Tenniel^rillustrator'
     
     >>> str(author)
-    'John Tenniel^xillustrator'
+    'John Tenniel^rillustrator'
+    
+Iteration semantics are similar to dicts::
+
+    >>> for k in author: print k
+    _
+    r
+    
+    >>> for k, v in author.items(): print k, v
+    _ John Tenniel
+    r illustrator
 """
 
 from isis.model.subfield import expand, CompositeString
+import json
 
 def test():
     import doctest

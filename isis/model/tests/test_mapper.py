@@ -36,7 +36,7 @@ Object-document mapper
     ...     pages = TextProperty(validator=is_number)
     ...
     
-Using ReferenceProperty
+Using ReferenceProperty::
     
     >>> class Collection(Document):
     ...     title = TextProperty(required=True, validator=text_validator)
@@ -127,6 +127,14 @@ Manipulating its attributes::
     ...
     TypeError: Reference value must be <class '__main__.Collection'>
 
+Serialization and deserialization actions::
+
+    >>> book1_serialized = book1.serialize()
+    >>> book1_serialized
+    '{"authors": ["Hofstadter, Douglas", "Rose, Daiana"], "pages": "777", "title": "Godel, Escher, Bach"}'
+    
+    >>> book2_serialized = book2.serialize()
+    >>> book2_serialized
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty

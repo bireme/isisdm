@@ -29,12 +29,12 @@ class OrderedProperty(object):
         
     def __get__(self, instance, cls):
         try:
-            return instance._props[self.name]
+            return instance._prop_values[self.name]
         except KeyError:
             raise AttributeError("'%s' object has no attribute '%s'" % (instance.__class__.__name__, self.name))
         
     def __set__(self, instance, value):
-        instance._props[self.name] = value
+        instance._prop_values[self.name] = value
         
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__, self.name)
@@ -46,32 +46,29 @@ class OrderedMeta(type):
             if isinstance(attr, OrderedProperty):
                 attr.name = key
                 props.append(attr)
-        dict['_ordered_prop_keys'] = sorted(props, key=attrgetter('order'))
+        dict['_ordered_props'] = sorted(props, key=attrgetter('order'))
         return type.__new__(cls, name, bases, dict)
         
     def __iter__(self):
-        return iter(self._ordered_prop_keys)
+        return (prop.name for prop in self._ordered_props)
 
     def __contains__(self, key):
-        return key in self._ordered_prop_keys
+        return key in self._ordered_props
 
 class OrderedModel(object):
     __metaclass__ = OrderedMeta
 
     def __init__(self, **kwargs):
-        self._props = {}
+        self._prop_values = {}
         for k in kwargs:
             setattr(self, k, kwargs[k])
     
     def __iter__(self):
-        return (prop.name for prop in self.__class__)
-        
-    def __contains__(self, key):
-        return key in self.__class__
-
+        return iter(self.__class__)
+    
     def iteritems(self):
-        return ((prop.name, getattr(self, prop.name)) 
-                for prop in self.__class__)
+        return ((key, getattr(self, key)) 
+                for key in self.__class__)
 
 
 if __name__=='__main__':
