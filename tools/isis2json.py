@@ -156,10 +156,11 @@ def writeJsonArray(iterRecords, file_name, output, qty, skip, id_tag,
             elif mfn:
                 record['_id'] = record[ISIS_MFN_KEY]
             if prefix:
-                for tag in record:
+                for tag in tuple(record): # iterate over a fixed sequence of tags
                     if str(tag).isdigit():
                         record[prefix+tag] = record[tag]
-                        del record[tag]
+                        del record[tag] # this is why we iterate over a tuple
+                        # with the tags, and not directly on the record dict
             if constant:
                 constant_key, constant_value = constant.split(':')
                 record[constant_key] = constant_value
