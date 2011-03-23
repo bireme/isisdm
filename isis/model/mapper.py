@@ -40,8 +40,19 @@ class Document(OrderedModel):
             descriptor = self.__class__.__getattribute__(self.__class__, prop)
             descriptor.validate(self, getattr(self, prop, None))
             
-    def serialize(self):
-        return json.dumps(dict(self.iteritems()))
+    def to_cstruct(self):
+        '''
+        generate a colander struct representation for Document type classes
+        '''
+        cstruct = {}
+        for prop in self:
+            descriptor = self.__class__.__getattribute__(self.__class__, prop)
+            if isinstance(getattr(self, prop, None), Document):
+                cstruct[prop] = getattr(self, prop, None).to_cstruct()
+            else:
+                cstruct[prop] = descriptor._cstruct(self, getattr(self, prop, None))
+        return cstruct
+
 
 class Invalid(Exception):
     ''' TODO: study colander.Invalid exception '''
@@ -79,7 +90,7 @@ class CheckedProperty(OrderedProperty):
 
         
 class TextProperty(CheckedProperty):
-    
+
     def __set__(self, instance, value):
         if not isinstance(value, basestring):
             raise Invalid('%r value must be unicode or str instance' % self.name)
@@ -88,17 +99,27 @@ class TextProperty(CheckedProperty):
             raise Invalid('%r value cannot be empty' % self.name)
         super(TextProperty, self).__set__(instance, value)
 
-
+    def _cstruct(self, instance, value):
+        '''
+        colander struct representation for this property
+        '''
+        return value
+        
 class MultiTextProperty(CheckedProperty):
-    
+
     def __set__(self, instance, value):
         if not isinstance(value, tuple):
             raise TypeError('MultiText value must be tuple')
         super(MultiTextProperty, self).__set__(instance, value)
 
+    def _cstruct(self, instance, value):
+        '''
+        colander struct representation for this property
+        '''
+        return value
 
 class CompositeTextProperty(CheckedProperty):
-    
+
     def __init__(self, subkeys=None, **kwargs):
         super(CompositeTextProperty, self).__init__(**kwargs)
         self.subkeys = subkeys
@@ -110,6 +131,11 @@ class CompositeTextProperty(CheckedProperty):
         composite_text = CompositeString(value, self.subkeys)
         super(CompositeTextProperty, self).__set__(instance, composite_text)
     
+    def _cstruct(self, instance, value):
+        '''
+        colander struct representation for this property
+        '''        
+        return value.items()
     
 class MultiCompositeTextProperty(CheckedProperty):
     
@@ -124,6 +150,11 @@ class MultiCompositeTextProperty(CheckedProperty):
         composite_texts = tuple(CompositeString(raw_composite_text, self.subkeys) for raw_composite_text in value)                    
         super(MultiCompositeTextProperty, self).__set__(instance, composite_texts)
 
+    def _cstruct(self, instance, value):
+        '''
+        colander struct representation for this property
+        '''        
+        return tuple(composite_text.items() for composite_text in value)
 
 class ReferenceProperty(CheckedProperty):
     
@@ -137,6 +168,11 @@ class ReferenceProperty(CheckedProperty):
         
         super(ReferenceProperty, self).__set__(instance, value)
     
+    def _cstruct(self, instance, value):
+        '''
+        colander struct representation for this property
+        '''        
+        return value
     
 if __name__ == '__main__':
     import doctest

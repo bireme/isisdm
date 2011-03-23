@@ -129,12 +129,18 @@ Manipulating its attributes::
 
 Serialization and deserialization actions::
 
-    >>> book1_serialized = book1.serialize()
+    >>> book1_serialized = book1.to_cstruct()
     >>> book1_serialized
-    '{"authors": ["Hofstadter, Douglas", "Rose, Daiana"], "pages": "777", "title": "Godel, Escher, Bach"}'
+    {'authors': (u'Hofstadter, Douglas', u'Rose, Daiana'), 'pages': u'777', 'title': u'Godel, Escher, Bach'}
     
-    >>> book2_serialized = book2.serialize()
+    >>> book2_serialized = book2.to_cstruct()
     >>> book2_serialized
+    {'authors': ([('_', u''), (u'l', u'Heineman'), (u'f', u'George T.')], [('_', u''), (u'l', u'Pollice'), (u'f', u'Gary')], [('_', u''), (u'l', u'Selkov'), (u'f', u'Stanley')]), 'collection': {'publisher': u'PragProg', 'title': u'Pragmatic Book Shelf'}, 'title': u'Ninar songs'}
+    
+    >>> article1_serialized = article1.to_cstruct()
+    >>> article1_serialized
+    {'publisher': u'IEEE Computer Society', 'authors': [('_', u''), (u'l', u'Grier'), (u'f', u'David')], 'title': u'Too Soon To Tell: Essays for the End of The Computer Revolution'}
+    
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty
