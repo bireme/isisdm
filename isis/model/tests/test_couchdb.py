@@ -7,13 +7,13 @@ Persisting a document in CouchDB
 --------------------------------
     >>> def text_validator(node, value):
     ...     if value.startswith('Banana'):
-    ...         raise BaseException, "You can't start a text with 'Banana'"
+    ...         raise Exception("You can't start a text with 'Banana'")
     ...
 
     >>> def colon_validator(node, value):
     ...     for author in value:
     ...         if ',' not in author:
-    ...             raise BaseException, "Authors name must be in 'LastName, FirstName' format"
+    ...             raise Exception("Authors name must be in 'LastName, FirstName' format")
 
     >>> class Book(CouchdbDocument):
     ...     title = TextProperty(required=True, validator=text_validator)
