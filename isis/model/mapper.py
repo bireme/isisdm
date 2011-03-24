@@ -27,7 +27,7 @@ class Document(OrderedModel):
     def __init__(self, **kwargs):
         super(Document, self).__init__(**kwargs)
         self.validate()
-                
+
     def isplural(self, name):
         return isinstance(self.__class__.__getattribute__(self.__class__, name), PluralProperty)
 
@@ -36,22 +36,9 @@ class Document(OrderedModel):
                 for prop in self.__class__)
 
     def validate(self):
-        for prop in self:            
-            descriptor = self.__class__.__getattribute__(self.__class__, prop)
-            descriptor.validate(self, getattr(self, prop, None))
-            
-    def to_cstruct(self):
-        '''
-        generate a colander struct representation for Document type classes
-        '''
-        cstruct = {}
         for prop in self:
             descriptor = self.__class__.__getattribute__(self.__class__, prop)
-            if isinstance(getattr(self, prop, None), Document):
-                cstruct[prop] = getattr(self, prop, None).to_cstruct()
-            else:
-                cstruct[prop] = descriptor._cstruct(self, getattr(self, prop, None))
-        return cstruct
+            descriptor.validate(self, getattr(self, prop, None))
 
 
 class Invalid(Exception):
@@ -62,7 +49,7 @@ class Invalid(Exception):
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.message)
 
-        
+
 class CheckedProperty(OrderedProperty):
 
     def __init__(self, required=False, validator=None, choices=None):
@@ -78,33 +65,33 @@ class CheckedProperty(OrderedProperty):
 
     def validate(self, instance, value):
         if self.missing(instance):
-            raise Invalid('required %r property missing' % self.name)
+            raise TypeError('required %r property missing' % self.name)
         if value is not None and self.validator:
             self.validator(self, value)
-                
-    def missing(self, instance): 
-        # a property is missing if it is required and 
+
+    def missing(self, instance):
+        # a property is missing if it is required and
         # does not exist or is set to None
         # if it is not required, it is never missing
         return self.required and getattr(instance, self.name, None) is None
 
-        
+
 class TextProperty(CheckedProperty):
 
     def __set__(self, instance, value):
         if not isinstance(value, basestring):
-            raise Invalid('%r value must be unicode or str instance' % self.name)
+            raise TypeError('%r value must be unicode or str instance' % self.name)
         value = unicode(value)
         if self.required and len(value.rstrip()) == 0:
             raise Invalid('%r value cannot be empty' % self.name)
         super(TextProperty, self).__set__(instance, value)
 
-    def _cstruct(self, instance, value):
+    def _pystruct(self, instance, value):
         '''
-        colander struct representation for this property
+        python representation for this property
         '''
         return value
-        
+
 class MultiTextProperty(CheckedProperty):
 
     def __set__(self, instance, value):
@@ -112,9 +99,9 @@ class MultiTextProperty(CheckedProperty):
             raise TypeError('MultiText value must be tuple')
         super(MultiTextProperty, self).__set__(instance, value)
 
-    def _cstruct(self, instance, value):
+    def _pystruct(self, instance, value):
         '''
-        colander struct representation for this property
+        python representation for this property
         '''
         return value
 
@@ -123,58 +110,55 @@ class CompositeTextProperty(CheckedProperty):
     def __init__(self, subkeys=None, **kwargs):
         super(CompositeTextProperty, self).__init__(**kwargs)
         self.subkeys = subkeys
-    
+
     def __set__(self, instance, value):
         if not isinstance(value, basestring):
-            raise Invalid('%r value must be unicode or str instance' % self.name)
-                
+            raise TypeError('%r value must be unicode or str instance' % self.name)
+
         composite_text = CompositeString(value, self.subkeys)
         super(CompositeTextProperty, self).__set__(instance, composite_text)
-    
-    def _cstruct(self, instance, value):
+
+    def _pystruct(self, instance, value):
         '''
-        colander struct representation for this property
-        '''        
+        python representation for this property
+        '''
         return value.items()
-    
+
 class MultiCompositeTextProperty(CheckedProperty):
-    
+
     def __init__(self, subkeys=None, **kwargs):
         super(MultiCompositeTextProperty, self).__init__(**kwargs)
         self.subkeys = subkeys
-    
+
     def __set__(self, instance, value):
         if not isinstance(value, tuple):
             raise TypeError('MultiCompositeText value must be tuple')
-                
-        composite_texts = tuple(CompositeString(raw_composite_text, self.subkeys) for raw_composite_text in value)                    
+
+        composite_texts = tuple(CompositeString(raw_composite_text, self.subkeys) for raw_composite_text in value)
         super(MultiCompositeTextProperty, self).__set__(instance, composite_texts)
 
-    def _cstruct(self, instance, value):
+    def _pystruct(self, instance, value):
         '''
-        colander struct representation for this property
-        '''        
+        python representation for this property
+        '''
         return tuple(composite_text.items() for composite_text in value)
 
 class ReferenceProperty(CheckedProperty):
-    
-    def __init__(self, ref_type, **kwargs):
-        super(ReferenceProperty, self).__init__(**kwargs)
-        self.__ref_type = ref_type        
-        
+
     def __set__(self, instance, value):
-        if not isinstance(value, self.__ref_type):
-            raise TypeError('Reference value must be %s' % self.__ref_type)
-        
+        if not isinstance(value, basestring):
+            raise TypeError('Reference value must be unicode or str instance')
+        value = unicode(value)
+        if self.required and len(value.rstrip()) == 0:
+            raise Invalid('%r value cannot be empty' % self.name)
         super(ReferenceProperty, self).__set__(instance, value)
-    
-    def _cstruct(self, instance, value):
+
+    def _pystruct(self, instance, value):
         '''
-        colander struct representation for this property
-        '''        
+        python representation for this property
+        '''
         return value
-    
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-    
