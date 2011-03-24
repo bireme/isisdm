@@ -21,6 +21,7 @@
 from .ordered import OrderedProperty, OrderedModel
 from .subfield import CompositeString
 import json
+import colander
 
 class Document(OrderedModel):
 
@@ -28,18 +29,51 @@ class Document(OrderedModel):
         super(Document, self).__init__(**kwargs)
         self.validate()
 
-    def isplural(self, name):
-        return isinstance(self.__class__.__getattribute__(self.__class__, name), PluralProperty)
-
-    def iteritemsplural(self):
-        return ((prop.name, getattr(self, prop.name), self.isplural(prop.name))
-                for prop in self.__class__)
-
     def validate(self):
         for prop in self:
             descriptor = self.__class__.__getattribute__(self.__class__, prop)
             descriptor.validate(self, getattr(self, prop, None))
 
+    @classmethod
+    def get_schema(cls):
+        schema = colander.SchemaNode(colander.Mapping())
+        for prop in cls:
+
+            '''
+            if isinstance(cls.__dict__[prop], TextProperty):
+                colander_type = colander.String()
+            elif isinstance(cls.__dict__[prop], MultiTextProperty):
+                colander_type = colander.Sequence()
+            else:
+                raise ValueError('Unknown property type "%s"' % type(prop))
+            '''
+
+            descriptor = cls.__getattribute__(cls, prop)
+            colander_type = descriptor._colander_schema(cls, getattr(cls, prop, None))
+            schema.add(colander.SchemaNode(colander_type, name=prop))
+
+
+        return schema
+
+    def to_python(self):
+        '''
+        generate a python representation for Document type classes
+        '''
+        properties = {}
+        for prop in self:
+            descriptor = self.__class__.__getattribute__(self.__class__, prop)
+            properties[prop] = descriptor._pystruct(self, getattr(self, prop, None))
+        return properties
+
+    @classmethod
+    def from_python(cls, pystruct):
+        if cls.__name__ != pystruct.pop('type'):
+            raise TypeError()
+
+        isisdm_pystruct = dict((str(k), tuple(v) if isinstance(v, list) else v)
+            for k, v in pystruct.items())
+
+        return cls(**isisdm_pystruct)
 
 class Invalid(Exception):
     ''' TODO: study colander.Invalid exception '''
@@ -92,6 +126,9 @@ class TextProperty(CheckedProperty):
         '''
         return value
 
+    def _colander_schema(self, instance, value):
+        return colander.String()
+
 class MultiTextProperty(CheckedProperty):
 
     def __set__(self, instance, value):
@@ -104,6 +141,9 @@ class MultiTextProperty(CheckedProperty):
         python representation for this property
         '''
         return value
+
+    def _colander_schema(self, instance, value):
+        return colander.Sequence()
 
 class CompositeTextProperty(CheckedProperty):
 
@@ -123,6 +163,12 @@ class CompositeTextProperty(CheckedProperty):
         python representation for this property
         '''
         return value.items()
+
+    def _colander_schema(self, instance, value):
+        schema = colander.SchemaNode(Tuple())
+        schema.add(colander.SchemaNode(colander.String()), name='subkey')
+        schema.add(colander.SchemaNode(colander.String()), name='value')
+        return schema
 
 class MultiCompositeTextProperty(CheckedProperty):
 

@@ -27,6 +27,8 @@ class CouchdbDocument(Document):
         doc = self.to_python()
         if not doc.has_key('_id'):
             doc['_id'] = str(uuid.uuid4())
+        if not doc.has_key('type'):
+            doc['type'] = self.__class__.__name__
         db.save_doc(doc)
         return doc['_id']
 
@@ -35,23 +37,3 @@ class CouchdbDocument(Document):
         doc = db.get(doc_id)
         return cls.from_python(doc)
 
-    def to_python(self):
-        '''
-        generate a python representation for Document type classes
-        '''
-        properties = {}
-        properties['type'] = self.__class__.__name__
-        for prop in self:
-            descriptor = self.__class__.__getattribute__(self.__class__, prop)
-            properties[prop] = descriptor._pystruct(self, getattr(self, prop, None))
-        return properties
-
-    @classmethod
-    def from_python(cls, pystruct):
-        if cls.__name__ != pystruct.pop('type'):
-            raise TypeError()
-
-        isisdm_pystruct = dict((str(k), tuple(v) if isinstance(v, list) else v)
-            for k, v in pystruct.items())
-
-        return cls(**isisdm_pystruct)

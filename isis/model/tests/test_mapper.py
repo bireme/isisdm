@@ -125,6 +125,14 @@ Manipulating its attributes::
     Traceback (most recent call last):
       ...
     TypeError: Reference value must be unicode or str instance
+
+Colander Schema Generation::
+
+    >>> book1.to_python()
+
+    >>> Book.get_schema()
+
+
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty

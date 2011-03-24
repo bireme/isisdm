@@ -28,8 +28,7 @@ Instantiating a Book object::
     ...               pages='777')
     ...
 
-    >>> book1.to_python() == {'type': 'Book',
-    ...    'authors': (u'Hofstadter, Douglas',), 'pages': u'777',
+    >>> book1.to_python() == {'authors': (u'Hofstadter, Douglas',), 'pages': u'777',
     ...    'title': u'Godel, Escher, Bach'}
     True
 
