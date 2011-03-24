@@ -19,12 +19,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .mapper import Document
-
+import uuid
 
 class CouchdbDocument(Document):
 
     def save(self, db):
         doc = self.to_python()
+        if not doc.has_key('_id'):
+            doc['_id'] = str(uuid.uuid4())
         db.save_doc(doc)
         return doc['_id']
 
