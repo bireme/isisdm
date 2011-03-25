@@ -38,21 +38,9 @@ class Document(OrderedModel):
     def get_schema(cls):
         schema = colander.SchemaNode(colander.Mapping())
         for prop in cls:
-
-            '''
-            if isinstance(cls.__dict__[prop], TextProperty):
-                colander_type = colander.String()
-            elif isinstance(cls.__dict__[prop], MultiTextProperty):
-                colander_type = colander.Sequence()
-            else:
-                raise ValueError('Unknown property type "%s"' % type(prop))
-            '''
-
             descriptor = cls.__getattribute__(cls, prop)
-            colander_type = descriptor._colander_schema(cls, getattr(cls, prop, None))
-            schema.add(colander.SchemaNode(colander_type, name=prop))
-
-
+            colander_definition = descriptor._colander_schema(cls, getattr(cls, prop, None))
+            schema.add(colander_definition)
         return schema
 
     def to_python(self):
@@ -127,7 +115,7 @@ class TextProperty(CheckedProperty):
         return value
 
     def _colander_schema(self, instance, value):
-        return colander.String()
+        return colander.SchemaNode(colander.String(), name=self.name)
 
 class MultiTextProperty(CheckedProperty):
 
@@ -143,7 +131,9 @@ class MultiTextProperty(CheckedProperty):
         return value
 
     def _colander_schema(self, instance, value):
-        return colander.Sequence()
+        return colander.SchemaNode(colander.Sequence(),
+                                   colander.SchemaNode(colander.String()),
+                                   name=self.name)
 
 class CompositeTextProperty(CheckedProperty):
 
@@ -165,10 +155,13 @@ class CompositeTextProperty(CheckedProperty):
         return value.items()
 
     def _colander_schema(self, instance, value):
-        schema = colander.SchemaNode(Tuple())
-        schema.add(colander.SchemaNode(colander.String()), name='subkey')
-        schema.add(colander.SchemaNode(colander.String()), name='value')
-        return schema
+        schema = colander.SchemaNode(colander.Tuple())
+        for subkey in self.subkeys:
+            schema.add(colander.SchemaNode(colander.String(), name=subkey))
+
+        return colander.SchemaNode(colander.Tuple(),
+                                   schema,
+                                   name=self.name)
 
 class MultiCompositeTextProperty(CheckedProperty):
 
@@ -189,6 +182,15 @@ class MultiCompositeTextProperty(CheckedProperty):
         '''
         return tuple(composite_text.items() for composite_text in value)
 
+    def _colander_schema(self, instance, value):
+        schema = colander.SchemaNode(colander.Tuple())
+        for subkey in self.subkeys:
+            schema.add(colander.SchemaNode(colander.String(), name=subkey))
+
+        return colander.SchemaNode(colander.Sequence(),
+                                   schema,
+                                   name=self.name)
+
 class ReferenceProperty(CheckedProperty):
 
     def __set__(self, instance, value):
@@ -204,6 +206,9 @@ class ReferenceProperty(CheckedProperty):
         python representation for this property
         '''
         return value
+
+    def _colander_schema(self, instance, value):
+        return [colander.String()]
 
 if __name__ == '__main__':
     import doctest
