@@ -28,8 +28,8 @@ Instantiating a Book object::
     ...               pages='777')
     ...
 
-    >>> book1.to_python() == {'authors': (u'Hofstadter, Douglas',), 'pages': u'777',
-    ...    'title': u'Godel, Escher, Bach'}
+    >>> book1.to_python() == {'authors': (u'Hofstadter, Douglas',),
+    ...     'TYPE': 'Book', 'pages': u'777', 'title': u'Godel, Escher, Bach'}
     True
 
     >>> book1_id = book1.save(db)

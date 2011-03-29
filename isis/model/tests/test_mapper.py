@@ -129,11 +129,15 @@ Manipulating its attributes::
 Colander Schema Generation::
 
     >>> book1.to_python() == {'authors': (u'Hofstadter, Douglas', u'Rose, Daiana'),
-    ...    'pages': u'777', 'title': u'Godel, Escher, Bach'}
+    ...     'TYPE': 'Book', 'pages': u'777', 'title': u'Godel, Escher, Bach'}
     True
 
-    >>> Book.get_schema() #doctest: +ELLIPSIS
-    <colander.SchemaNode...>
+
+    >>> sc = Book.get_schema()
+    >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in sc.children)
+    'title:String authors:Sequence pages:String'
+
+
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty
