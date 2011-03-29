@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from .mapper import Document
+from .mapper import Document, TextProperty
 import uuid
 
 class CouchdbDocument(Document):
@@ -27,8 +27,6 @@ class CouchdbDocument(Document):
         doc = self.to_python()
         if not doc.has_key('_id'):
             doc['_id'] = str(uuid.uuid4())
-        if not doc.has_key('type'):
-            doc['type'] = self.__class__.__name__
         db.save_doc(doc)
         return doc['_id']
 
@@ -36,4 +34,3 @@ class CouchdbDocument(Document):
     def get(cls, db, doc_id):
         doc = db.get(doc_id)
         return cls.from_python(doc)
-

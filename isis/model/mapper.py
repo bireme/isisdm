@@ -41,6 +41,7 @@ class Document(OrderedModel):
             descriptor = cls.__getattribute__(cls, prop)
             colander_definition = descriptor._colander_schema(cls, getattr(cls, prop, None))
             schema.add(colander_definition)
+
         return schema
 
     def to_python(self):
@@ -51,11 +52,14 @@ class Document(OrderedModel):
         for prop in self:
             descriptor = self.__class__.__getattribute__(self.__class__, prop)
             properties[prop] = descriptor._pystruct(self, getattr(self, prop, None))
+        if not 'TYPE' in properties:
+            properties['TYPE'] = self.TYPE
+
         return properties
 
     @classmethod
     def from_python(cls, pystruct):
-        if cls.__name__ != pystruct.pop('type'):
+        if cls.__name__ != pystruct.pop('TYPE'):
             raise TypeError()
 
         isisdm_pystruct = dict((str(k), tuple(v) if isinstance(v, list) else v)
@@ -131,9 +135,11 @@ class MultiTextProperty(CheckedProperty):
         return value
 
     def _colander_schema(self, instance, value):
-        return colander.SchemaNode(colander.Sequence(),
-                                   colander.SchemaNode(colander.String()),
-                                   name=self.name)
+        schema = colander.SchemaNode(colander.Sequence(), name=self.name)
+        schema.add(colander.SchemaNode(colander.String(), name=self.name))
+
+        return schema
+
 
 class CompositeTextProperty(CheckedProperty):
 
@@ -155,12 +161,12 @@ class CompositeTextProperty(CheckedProperty):
         return value.items()
 
     def _colander_schema(self, instance, value):
-        schema = colander.SchemaNode(colander.Tuple())
-        for subkey in self.subkeys:
-            schema.add(colander.SchemaNode(colander.String(), name=subkey))
+        subfield = colander.SchemaNode(colander.Tuple())
+        subfield.add(colander.SchemaNode(colander.String(), name='subkey'))
+        subfield.add(colander.SchemaNode(colander.String(), name='value'))
 
-        return colander.SchemaNode(colander.Tuple(),
-                                   schema,
+        return colander.SchemaNode(colander.Sequence(),
+                                   subfield,
                                    name=self.name)
 
 class MultiCompositeTextProperty(CheckedProperty):
