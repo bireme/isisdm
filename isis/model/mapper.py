@@ -59,7 +59,7 @@ class Document(OrderedModel):
 
     @classmethod
     def from_python(cls, pystruct):
-        if cls.__name__ != pystruct.pop('TYPE'):
+        if 'TYPE' in pystruct and cls.__name__ != pystruct.pop('TYPE'):
             raise TypeError()
 
         isisdm_pystruct = dict((str(k), tuple(v) if isinstance(v, list) else v)
