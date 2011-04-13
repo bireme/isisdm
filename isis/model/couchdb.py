@@ -18,16 +18,35 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from scielobooks.utilities import base28
 from .mapper import Document, TextProperty
 import uuid
+import couchdbkit
 
 class CouchdbDocument(Document):
+
+    def __clean_before_save(self, doc):
+        '''
+        removes attributes with None values
+        '''
+        doc = dict((str(k), v) for k, v in doc.items() if v is not None)
+
+        return doc
 
     def save(self, db):
         doc = self.to_python()
         if not doc.has_key('_id'):
-            doc['_id'] = str(uuid.uuid4())
-        db.save_doc(doc)
+            doc['_id'] = base28.reprbase(int(uuid.uuid4()))
+
+        doc = self.__clean_before_save(doc)
+
+        while True:
+            try:
+                db.save_doc(doc)
+                break
+            except couchdbkit.ResourceConflict:
+                doc['_id'] = base28.reprbase(int(uuid.uuid4()))
+
         return doc['_id']
 
     @classmethod

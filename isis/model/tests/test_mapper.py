@@ -48,6 +48,18 @@ Using ReferenceProperty::
     ...     collection = ReferenceProperty()
     ...
 
+Using class Meta::
+
+    >>> class BookWithinMeta(Document):
+    ...     title = TextProperty(required=True, validator=text_validator)
+    ...     authors = MultiTextProperty(required=False, validator=colon_validator)
+    ...     pages = TextProperty()
+    ...     status = TextProperty()
+    ...
+    ...     class Meta:
+    ...         hide = ('status',)
+
+
 Instantiating a Book object::
 
     >>> book1 = Book(title='Godel, Escher, Bach',
@@ -137,7 +149,11 @@ Colander Schema Generation::
     >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in sc.children)
     'title:String authors:Sequence pages:String'
 
+Hidding an attribute
 
+    >>> book_with_meta_schema = BookWithinMeta.get_schema()
+    >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in book_with_meta_schema.children)
+    'title:String authors:Sequence pages:String'
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty

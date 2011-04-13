@@ -37,7 +37,17 @@ class Document(OrderedModel):
     @classmethod
     def get_schema(cls):
         schema = colander.SchemaNode(colander.Mapping())
+        exclude_fields = ()
+
+        if hasattr(cls, 'Meta'):
+            if hasattr(cls.Meta, 'hide'):
+                if not isinstance(cls.Meta.hide, tuple):
+                    raise TypeError('hide value must be tuple')
+                exclude_fields = cls.Meta.hide
+
         for prop in cls:
+            if prop in exclude_fields:
+                continue
             descriptor = cls.__getattribute__(cls, prop)
             colander_definition = descriptor._colander_schema(cls, getattr(cls, prop, None))
             schema.add(colander_definition)
