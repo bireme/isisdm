@@ -22,6 +22,7 @@ from scielobooks.utilities import base28
 from .mapper import Document, TextProperty
 import uuid
 import couchdbkit
+import time
 
 class CouchdbDocument(Document):
 
@@ -45,6 +46,7 @@ class CouchdbDocument(Document):
                 db.save_doc(doc)
                 break
             except couchdbkit.ResourceConflict:
+                time.sleep(0.5)
                 doc['_id'] = base28.reprbase(int(uuid.uuid4()))
 
         return doc['_id']
