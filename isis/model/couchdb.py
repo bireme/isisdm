@@ -58,6 +58,7 @@ class CouchdbDocument(Document):
         while True:
             try:
                 db.save_doc(doc)
+                #TODO: percorrer todos files properties e os atachar
                 break
             except couchdbkit.ResourceConflict:
                 time.sleep(0.5)

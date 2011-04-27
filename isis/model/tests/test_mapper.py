@@ -59,6 +59,13 @@ Using class Meta::
     ...     class Meta:
     ...         hide = ('status',)
 
+Using FileProperty::
+
+    >>> class BookWithAttachment(Document):
+    ...     title = TextProperty(required=True, validator=text_validator)
+    ...     authors = MultiCompositeTextProperty(required=False, subkeys='fl')
+    ...     cover = FileProperty()
+    ...
 
 Instantiating a Book object::
 
@@ -80,6 +87,12 @@ Instantiating a Book object::
     ...                        u'^lPollice^fGary',
     ...                        u'^lSelkov^fStanley'),
     ...               collection='123abc')
+    ...
+    >>> book3 = BookWithAttachment(title='Other Ninar songs',
+    ...               authors=(u'^lHeineman^fGeorge T.',
+    ...                        u'^lPollice^fGary',
+    ...                        u'^lSelkov^fStanley'),
+    ...               cover={'file':open('test_mapper.py')})
     ...
 
 Manipulating its attributes::
@@ -157,7 +170,7 @@ Hidding an attribute
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty
-from isis.model import CompositeTextProperty, MultiCompositeTextProperty, ReferenceProperty
+from isis.model import CompositeTextProperty, MultiCompositeTextProperty, ReferenceProperty, FileProperty
 
 def test():
     import doctest
