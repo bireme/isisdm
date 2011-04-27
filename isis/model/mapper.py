@@ -132,6 +132,27 @@ class TextProperty(CheckedProperty):
         return colander.SchemaNode(colander.String(), name=self.name)
 
 
+class FileProperty(CheckedProperty):
+
+    def __set__(self, instance, value):
+        if not isinstance(value, dict):
+            raise TypeError('%r must be a dictionary' % self.name)
+        
+        if 'file' not in value:
+            raise TypeError('file value must exists')                
+
+        super(FileProperty, self).__set__(instance, value)
+
+    def _pystruct(self, instance, value):
+        '''
+        python representation for this property
+        '''
+        return value
+
+    def _colander_schema(self, instance, value):
+        return colander.SchemaNode(colander.String(), name=self.name)
+
+
 class MultiTextProperty(CheckedProperty):
 
     def __set__(self, instance, value):

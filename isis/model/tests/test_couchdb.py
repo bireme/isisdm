@@ -20,6 +20,11 @@ Persisting a document in CouchDB
     ...     authors = MultiTextProperty(required=False, validator=colon_validator)
     ...     pages = TextProperty()
 
+    >>> class BookWithAttachment(CouchdbDocument):
+    ...     title = TextProperty(required=True, validator=text_validator)
+    ...     authors = MultiCompositeTextProperty(required=False, subkeys='fl')
+    ...     cover = FileProperty()
+    ...
 
 Instantiating a Book object::
 
@@ -44,11 +49,20 @@ Instantiating a Book object::
     >>> book2.title
     u'Godel, Escher, Bach'
 
+    >>> book3 = BookWithAttachment(title='Other Ninar songs',
+    ...               authors=(u'^lHeineman^fGeorge T.',
+    ...                        u'^lPollice^fGary',
+    ...                        u'^lSelkov^fStanley'),
+    ...               cover={'file':open('test_mapper.py')})
+    ...
+    >>> book3_id = book3.save(db)
+
+
 
 """
 from isis.model import CouchdbDocument
 from isis.model import TextProperty, MultiTextProperty
-from isis.model import CompositeTextProperty, MultiCompositeTextProperty, ReferenceProperty
+from isis.model import CompositeTextProperty, MultiCompositeTextProperty, ReferenceProperty, FileProperty
 import couchdbkit
 
 
