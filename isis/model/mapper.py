@@ -131,6 +131,7 @@ class TextProperty(CheckedProperty):
     def _colander_schema(self, instance, value):
         return colander.SchemaNode(colander.String(), name=self.name)
 
+
 class MultiTextProperty(CheckedProperty):
 
     def __set__(self, instance, value):

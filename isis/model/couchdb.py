@@ -26,6 +26,10 @@ import time
 
 class CouchdbDocument(Document):
 
+    def __init__(self, **kwargs):
+        super(CouchdbDocument, self).__init__(**kwargs)
+        self._id = base28.genbase(5)
+
     def __clean_before_save(self, doc):
         '''
         removes attributes with None values
@@ -34,10 +38,20 @@ class CouchdbDocument(Document):
 
         return doc
 
+    def to_python(self):
+        pstruct = super(CouchdbDocument, self).to_python()
+        pstruct['_id'] = self._id
+        
+        try:
+            pstruct['_rev'] = self._rev
+        except AttributeError:
+            pass
+        
+        return pstruct
+
     def save(self, db):
+
         doc = self.to_python()
-        if not doc.has_key('_id'):
-            doc['_id'] = base28.reprbase(int(uuid.uuid4()))
 
         doc = self.__clean_before_save(doc)
 
@@ -47,7 +61,7 @@ class CouchdbDocument(Document):
                 break
             except couchdbkit.ResourceConflict:
                 time.sleep(0.5)
-                doc['_id'] = base28.reprbase(int(uuid.uuid4()))
+                doc['_id'] = base28.genbase(5)
 
         return doc['_id']
 
