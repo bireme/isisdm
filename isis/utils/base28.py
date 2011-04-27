@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import string
+from random import randrange
 
 BASE36 = string.digits+string.ascii_lowercase
 # sem vogais, para nao formar palavras em portugues
@@ -24,6 +25,9 @@ def calcbase(s, digitos=BASE28):
     ''' devolve o valor numérico de `s` na base representada pelos dígitos '''
     return sum(digitos.index(dig)*len(digitos)**pot
                for pot, dig in enumerate(reversed(s)))
+
+def genbase(tamanho, digitos=BASE28):
+    return reprbase(randrange(len(digitos)**tamanho), digitos).rjust(tamanho,digitos[0])
 
 if __name__=='__main__':
     print 'Amostra de alguns números em base 28'
