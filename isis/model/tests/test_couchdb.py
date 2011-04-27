@@ -25,18 +25,26 @@ Instantiating a Book object::
 
     >>> book1 = Book(title='Godel, Escher, Bach',
     ...               authors=(u'Hofstadter, Douglas',),
-    ...               pages='777')
+    ...               pages='777',)
     ...
 
-    >>> book1.to_python() == {'authors': (u'Hofstadter, Douglas',),
-    ...     'TYPE': 'Book', 'pages': u'777', 'title': u'Godel, Escher, Bach'}
-    True
+    >>> len(book1._id)
+    5
+
+    >>> for key in sorted(book1.to_python()): print key, book1.to_python()[key] #doctest: +ELLIPSIS
+    TYPE Book
+    _id ...
+    authors (u'Hofstadter, Douglas',)
+    pages 777
+    title Godel, Escher, Bach
 
     >>> book1_id = book1.save(db)
 
     >>> book2 = Book.get(db, book1_id)
     >>> book2.title
     u'Godel, Escher, Bach'
+
+
 """
 from isis.model import CouchdbDocument
 from isis.model import TextProperty, MultiTextProperty
