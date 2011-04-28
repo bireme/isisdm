@@ -92,7 +92,7 @@ Instantiating a Book object::
     ...               authors=(u'^lHeineman^fGeorge T.',
     ...                        u'^lPollice^fGary',
     ...                        u'^lSelkov^fStanley'),
-    ...               cover={'file':open('test_mapper.py')})
+    ...               cover={'fp':open('test_mapper.py')})
     ...
 
 Manipulating its attributes::
