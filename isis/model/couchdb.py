@@ -63,7 +63,7 @@ class CouchdbDocument(Document):
                     if isinstance(prop, FileProperty):
                         #import pdb; pdb.set_trace()
                         file_dict = getattr(self,key)
-                        db.put_attachment(doc, file_dict['fp'])                        
+                        db.put_attachment(doc, file_dict['fp'], getattr(self, key)['filename'])                        
                 break
             except couchdbkit.ResourceConflict:
                 time.sleep(0.5)
