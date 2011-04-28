@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from ..utils import base28
-from .mapper import Document, TextProperty
+from .mapper import Document, TextProperty, FileProperty
 import uuid
 import couchdbkit
 import time
@@ -58,14 +58,19 @@ class CouchdbDocument(Document):
         while True:
             try:
                 db.save_doc(doc)
-                #TODO: percorrer todos files properties e os atachar
+                for key in self.__class__:
+                    prop = self.__class__.__getattribute__(self.__class__,key)
+                    if isinstance(prop, FileProperty):
+                        #import pdb; pdb.set_trace()
+                        file_dict = getattr(self,key)
+                        db.put_attachment(doc, file_dict['fp'])                        
                 break
             except couchdbkit.ResourceConflict:
                 time.sleep(0.5)
                 doc['_id'] = base28.genbase(5)
 
         return doc['_id']
-
+    
     @classmethod
     def get(cls, db, doc_id):
         doc = db.get(doc_id)

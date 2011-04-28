@@ -18,10 +18,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from .ordered import OrderedProperty, OrderedModel
-from .subfield import CompositeString
+from ordered import OrderedProperty, OrderedModel
+from subfield import CompositeString
 import json
 import colander
+import deform
 
 class Document(OrderedModel):
 
@@ -138,8 +139,8 @@ class FileProperty(CheckedProperty):
         if not isinstance(value, dict):
             raise TypeError('%r must be a dictionary' % self.name)
         
-        if 'file' not in value:
-            raise TypeError('file value must exists')                
+        if 'fp' not in value:
+            raise TypeError('fp value must exists')                
 
         super(FileProperty, self).__set__(instance, value)
 
@@ -147,11 +148,16 @@ class FileProperty(CheckedProperty):
         '''
         python representation for this property
         '''
-        return value
+        return value['fp'].name
 
     def _colander_schema(self, instance, value):
-        return colander.SchemaNode(colander.String(), name=self.name)
-
+        class MemoryTmpStore(dict):
+            def preview_url(self, name):
+                return None
+        tmpstore = MemoryTmpStore()
+        return colander.SchemaNode(deform.FileData(), 
+                                   widget=deform.widget.FileUploadWidget(tmpstore),
+                                   name=self.name)
 
 class MultiTextProperty(CheckedProperty):
 
