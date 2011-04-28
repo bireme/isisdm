@@ -22,9 +22,11 @@ setup(name='isisdm', version='0.0.1',
       keywords='isis application database bireme',
       author="BIREME/OPAS/OMS",
       author_email="isisnbp-devel@listas.bireme.br",
-      url="http://reddes.bvsalud.org",
+      url="http://reddes.bvsalud.org/",
+      download_url='https://github.com/bireme/isisdm',
       license="LGPL v2.1 (http://www.gnu.org/licenses/lgpl-2.1.txt)",
       install_requires=requirements,
       test_suite='isis.model',
-      tests_require=['Nose']
+      tests_require=['Nose'],
+      description='ISIS-DM allows programmers to express constraints and functionality similar to those of the CDS/ISIS Field Definition Table and the CDS/ISIS Formatting Language, but in contemporary, object-oriented programming languages.',
     )
