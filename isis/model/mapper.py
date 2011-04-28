@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from ordered import OrderedProperty, OrderedModel
-from subfield import CompositeString
+from .ordered import OrderedProperty, OrderedModel
+from .subfield import CompositeString
 import json
 import colander
 import deform
@@ -140,15 +140,22 @@ class FileProperty(CheckedProperty):
             raise TypeError('%r must be a dictionary' % self.name)
         
         if 'fp' not in value:
-            raise TypeError('fp value must exists')                
+            raise TypeError('fp value must exists')
+        
+        if 'filename' not in value:
+            try:
+                value['filename'] = value['fp'].name
+            except AttributeError:
+                raise TypeError('%r must be a file' % self.name)
+
 
         super(FileProperty, self).__set__(instance, value)
 
     def _pystruct(self, instance, value):
         '''
         python representation for this property
-        '''
-        return value['fp'].name
+        '''        
+        return value['filename']
 
     def _colander_schema(self, instance, value):
         class MemoryTmpStore(dict):
