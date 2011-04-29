@@ -6,6 +6,7 @@ README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requirements = ['colander', 'deform']
+additional_files = ['README.txt', 'CHANGES.txt']
 
 setup(name='isisdm', version='0.0.1',
       packages=find_packages(),
@@ -29,4 +30,5 @@ setup(name='isisdm', version='0.0.1',
       test_suite='isis.model',
       tests_require=['Nose'],
       description='ISIS-DM allows programmers to express constraints and functionality similar to those of the CDS/ISIS Field Definition Table and the CDS/ISIS Formatting Language, but in contemporary, object-oriented programming languages.',
+      data_files=additional_files,
     )
