@@ -169,8 +169,9 @@ class FileProperty(CheckedProperty):
     def _pystruct(self, instance, value):
         '''
         python representation for this property
-        '''        
-        return value['filename']
+        '''
+        value['fp'] = None        
+        return value
 
     def _colander_schema(self, instance, value):
         class MemoryTmpStore(dict):
