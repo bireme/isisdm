@@ -28,7 +28,8 @@ class CouchdbDocument(Document):
 
     def __init__(self, **kwargs):
         super(CouchdbDocument, self).__init__(**kwargs)
-        self._id = base28.genbase(5)
+        if '_id' not in kwargs:
+            self._id = base28.genbase(5)
 
     def __clean_before_save(self, doc):
         '''
