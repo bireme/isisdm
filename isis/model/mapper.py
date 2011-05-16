@@ -132,6 +132,21 @@ class TextProperty(CheckedProperty):
     def _colander_schema(self, instance, value):
         return colander.SchemaNode(colander.String(), name=self.name)
 
+class BooleanProperty(CheckedProperty):
+
+    def __set__(self, instance, value):
+        if not isinstance(value, bool):
+            raise TypeError('%r must be bool' % self.name)
+        super(BooleanProperty, self).__set__(instance, value)
+
+    def _pystruct(self, instance, value):
+        '''
+        python representation for this property
+        '''
+        return value
+
+    def _colander_schema(self, instance, value):
+        return colander.SchemaNode(colander.Boolean(), name=self.name)
 
 class FileProperty(CheckedProperty):
 

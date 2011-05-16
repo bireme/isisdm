@@ -67,6 +67,13 @@ Using FileProperty::
     ...     cover = FileProperty()
     ...
 
+Using BooleanProperty::
+
+    >>> class BookWithBoolean(Document):
+    ...     title = TextProperty(required=True)
+    ...     is_published = BooleanProperty()
+    ...
+
 Instantiating a Book object::
 
     >>> book1 = Book(title='Godel, Escher, Bach',
@@ -94,6 +101,8 @@ Instantiating a Book object::
     ...                        u'^lSelkov^fStanley'),
     ...               cover={'fp':open('test_mapper.py')})
     ...
+    >>> book4 = BookWithBoolean(title='Other other Ninar songs',
+    ...                         is_published=True)
 
 Manipulating its attributes::
 
@@ -151,6 +160,13 @@ Manipulating its attributes::
       ...
     TypeError: Reference value must be unicode or str instance
 
+    >>> book4.is_published
+    True
+    >>> book4.is_published = 'must raise error'
+    Traceback (most recent call last):
+      ...
+    TypeError: 'is_published' must be bool
+
 Colander Schema Generation::
 
     >>> book1.to_python() == {'authors': (u'Hofstadter, Douglas', u'Rose, Daiana'),
@@ -162,6 +178,10 @@ Colander Schema Generation::
     >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in sc.children)
     'title:String authors:Sequence pages:String'
 
+    >>> book_with_bool_schema = BookWithBoolean.get_schema()
+    >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in book_with_bool_schema.children)
+    'title:String is_published:Boolean'
+
 Hidding an attribute
 
     >>> book_with_meta_schema = BookWithinMeta.get_schema()
@@ -170,7 +190,8 @@ Hidding an attribute
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty
-from isis.model import CompositeTextProperty, MultiCompositeTextProperty, ReferenceProperty, FileProperty
+from isis.model import CompositeTextProperty, MultiCompositeTextProperty
+from isis.model import ReferenceProperty, FileProperty, BooleanProperty
 
 def test():
     import doctest
