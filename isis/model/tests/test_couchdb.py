@@ -57,7 +57,9 @@ Instantiating a Book object::
     ...
     >>> book3_id = book3.save(db)
 
-
+    >>> book_schema = BookWithAttachment.get_schema()
+    >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in book_schema.children)
+    'title:String authors:Sequence cover:FileData _rev:String _id:String'
 
 """
 from isis.model import CouchdbDocument
