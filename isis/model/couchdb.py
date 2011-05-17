@@ -23,6 +23,8 @@ from .mapper import Document, TextProperty, FileProperty
 import uuid
 import couchdbkit
 import time
+import colander
+import deform
 
 class CouchdbDocument(Document):
 
@@ -50,6 +52,15 @@ class CouchdbDocument(Document):
         
         return pstruct
 
+    @classmethod
+    def from_python(cls, pystruct):
+        if pystruct['_id'] == 'None':
+            pystruct['_id'] = None
+        if pystruct['_rev'] == 'None':
+            pystruct['_rev'] = None
+        
+        return super(CouchdbDocument, cls).from_python(pystruct)
+
     def save(self, db):
 
         doc = self.to_python()
@@ -61,8 +72,7 @@ class CouchdbDocument(Document):
                 db.save_doc(doc)
                 for key in self.__class__:
                     prop = self.__class__.__getattribute__(self.__class__,key)
-                    if isinstance(prop, FileProperty):
-                        #import pdb; pdb.set_trace()
+                    if isinstance(prop, FileProperty):                        
                         file_dict = getattr(self,key)
                         db.put_attachment(doc, file_dict['fp'], getattr(self, key)['filename'])                        
                 break
@@ -76,3 +86,19 @@ class CouchdbDocument(Document):
     def get(cls, db, doc_id):
         doc = db.get(doc_id)
         return cls.from_python(doc)
+
+    @classmethod
+    def get_schema(cls):
+        schema = super(CouchdbDocument, cls).get_schema()
+        rev_definition = colander.SchemaNode(colander.String(),
+                                                  widget = deform.widget.HiddenWidget(),
+                                                  default=None,
+                                                  name='_rev')
+        id_definition = colander.SchemaNode(colander.String(),
+                                                  widget = deform.widget.HiddenWidget(),
+                                                  default=None,
+                                                  name='_id')                                        
+        schema.add(rev_definition)
+        schema.add(id_definition)
+
+        return schema
