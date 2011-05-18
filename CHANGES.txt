@@ -1,4 +1,6 @@
-0.0
+0.1.1
 ---
-
--  Initial version
+* Added FileProperty datatype
+* Added BooleanProperty datatype
+* Embedded _rev and _id in automatic generated forms (couchdb api)
+* Fixed bug that changes the _id attr of a persistent document
