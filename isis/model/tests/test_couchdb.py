@@ -43,9 +43,9 @@ Instantiating a Book object::
     pages 777
     title Godel, Escher, Bach
 
-    >>> book1_id = book1.save(db)
+    >>> book1.save(db)
 
-    >>> book2 = Book.get(db, book1_id)
+    >>> book2 = Book.get(db, book1._id)
     >>> book2.title
     u'Godel, Escher, Bach'
 

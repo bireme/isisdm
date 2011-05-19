@@ -62,7 +62,10 @@ class Document(OrderedModel):
         properties = {}
         for prop in self:
             descriptor = self.__class__.__getattribute__(self.__class__, prop)
-            properties[prop] = descriptor._pystruct(self, getattr(self, prop, None))
+            try:
+                properties[prop] = descriptor._pystruct(self, getattr(self, prop))
+            except AttributeError:
+                pass
         if not 'TYPE' in properties:
             properties['TYPE'] = self.TYPE
 
@@ -74,7 +77,7 @@ class Document(OrderedModel):
             raise TypeError()
 
         isisdm_pystruct = dict((str(k), tuple(v) if isinstance(v, list) else v)
-            for k, v in pystruct.items())
+            for k, v in pystruct.items() if v is not None)
 
         return cls(**isisdm_pystruct)
 
@@ -93,7 +96,7 @@ class CheckedProperty(OrderedProperty):
         super(CheckedProperty, self).__init__()
         self.required = required
         self.validator = validator
-        self.choices = choices if choices else []
+        self.choices = choices if choices else ()
 
     def __set__(self, instance, value):
         if self.validator:
@@ -130,7 +133,15 @@ class TextProperty(CheckedProperty):
         return value
 
     def _colander_schema(self, instance, value):
-        return colander.SchemaNode(colander.String(), name=self.name)
+        kwargs = {'name':self.name}
+        if not self.required:
+            kwargs.update({'missing':None})
+        if self.choices:
+            choices_keys = [item[0] for item in self.choices]
+            kwargs.update({'widget':deform.widget.SelectWidget(values=self.choices),
+                           'validator':colander.OneOf(choices_keys)})
+        
+        return colander.SchemaNode(colander.String(), **kwargs)
 
 class BooleanProperty(CheckedProperty):
 
@@ -146,7 +157,11 @@ class BooleanProperty(CheckedProperty):
         return value
 
     def _colander_schema(self, instance, value):
-        return colander.SchemaNode(colander.Boolean(), name=self.name)
+        kwargs = {'name':self.name}
+        if not self.required:
+            kwargs.update({'missing':None})
+
+        return colander.SchemaNode(colander.Boolean(), **kwargs)
 
 class FileProperty(CheckedProperty):
 
@@ -170,7 +185,9 @@ class FileProperty(CheckedProperty):
         '''
         python representation for this property
         '''
-        value['fp'] = None        
+        if isinstance(value, dict):
+            value['fp'] = None
+
         return value
 
     def _colander_schema(self, instance, value):
@@ -178,9 +195,13 @@ class FileProperty(CheckedProperty):
             def preview_url(self, name):
                 return None
         tmpstore = MemoryTmpStore()
-        return colander.SchemaNode(deform.FileData(), 
-                                   widget=deform.widget.FileUploadWidget(tmpstore),
-                                   name=self.name)
+
+        kwargs = {'widget':deform.widget.FileUploadWidget(tmpstore),
+                  'name':self.name}
+        if not self.required:
+            kwargs.update({'missing':None})
+
+        return colander.SchemaNode(deform.FileData(), **kwargs)
 
 class MultiTextProperty(CheckedProperty):
 
@@ -196,7 +217,11 @@ class MultiTextProperty(CheckedProperty):
         return value
 
     def _colander_schema(self, instance, value):
-        schema = colander.SchemaNode(colander.Sequence(), name=self.name)
+        kwargs = {'name':self.name}
+        if not self.required:
+            kwargs.update({'missing':None})
+
+        schema = colander.SchemaNode(colander.Sequence(), **kwargs)
         schema.add(colander.SchemaNode(colander.String(), name=self.name))
 
         return schema
