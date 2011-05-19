@@ -55,14 +55,14 @@ class CouchdbDocument(Document):
     @classmethod
     def from_python(cls, pystruct):
         if pystruct['_id'] == 'None':
-            pystruct['_id'] = None
+            pystruct['_id'] = base28.genbase(5)
         if pystruct['_rev'] == 'None':
             pystruct['_rev'] = None
         
         return super(CouchdbDocument, cls).from_python(pystruct)
 
+        
     def save(self, db):
-
         doc = self.to_python()
 
         doc = self.__clean_before_save(doc)
@@ -72,15 +72,16 @@ class CouchdbDocument(Document):
                 db.save_doc(doc)
                 for key in self.__class__:
                     prop = self.__class__.__getattribute__(self.__class__,key)
-                    if isinstance(prop, FileProperty):                        
-                        file_dict = getattr(self,key)
+                    if isinstance(prop, FileProperty):
+                        file_dict = getattr(self,key)                        
                         db.put_attachment(doc, file_dict['fp'], getattr(self, key)['filename'])                        
                 break
             except couchdbkit.ResourceConflict:
                 time.sleep(0.5)
                 doc['_id'] = base28.genbase(5)
 
-        return doc['_id']
+        self._rev = doc['_rev']
+        return
     
     @classmethod
     def get(cls, db, doc_id):

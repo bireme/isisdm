@@ -170,7 +170,7 @@ class FileProperty(CheckedProperty):
         '''
         python representation for this property
         '''
-        value['fp'] = None        
+        value['fp'] = None
         return value
 
     def _colander_schema(self, instance, value):
@@ -180,7 +180,8 @@ class FileProperty(CheckedProperty):
         tmpstore = MemoryTmpStore()
         return colander.SchemaNode(deform.FileData(), 
                                    widget=deform.widget.FileUploadWidget(tmpstore),
-                                   name=self.name)
+                                   name=self.name,
+                                   )
 
 class MultiTextProperty(CheckedProperty):
 
