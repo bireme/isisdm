@@ -23,6 +23,7 @@ from .subfield import CompositeString
 import json
 import colander
 import deform
+import hashlib
 
 class Document(OrderedModel):
 
@@ -169,8 +170,8 @@ class FileProperty(CheckedProperty):
         if not isinstance(value, dict):
             raise TypeError('%r must be a dictionary' % self.name)
         
-        if 'fp' not in value:
-            raise TypeError('fp value must exists')
+        # if 'fp' not in value:
+        #     raise TypeError('fp value must exists')
         
         if 'filename' not in value:
             try:
@@ -178,15 +179,20 @@ class FileProperty(CheckedProperty):
             except AttributeError:
                 raise TypeError('%r must be a file' % self.name)
 
+        if 'fp' in value:
+            value['md5'] = hashlib.md5(value['fp'].read()).hexdigest()
 
         super(FileProperty, self).__set__(instance, value)
 
     def _pystruct(self, instance, value):
         '''
         python representation for this property
-        '''
+        '''        
         if isinstance(value, dict):
-            value['fp'] = None
+            serializable_value = {'uid':value['uid'],
+                                  'filename':value['filename'],
+                                  'md5':value['md5'],}
+            return serializable_value
 
         return value
 

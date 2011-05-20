@@ -26,6 +26,57 @@ import time
 import colander
 import deform
 
+def _attach_exists(old_doc, property_name):
+    """
+    >>> old_doc = {u'title': u'Title example', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'cover': {u'filename': u'campos lilacs_scielolivros.xls', u'uid': u'BCE0I1KH1Y', u'md5': u'7da75d0e101dbf5c2eec9e117ae82e58'}, u'_attachments': {u'campos lilacs_scielolivros.xls': {u'stub': True, u'length': 17408, u'revpos': 25, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
+    >>> _attach_exists(old_doc, 'cover')
+    True
+    >>> _attach_exists(old_doc, 'title')
+    False
+    >>> _attach_exists(old_doc, 'not_exists')
+    False
+    """
+
+    if property_name in old_doc:
+        try:
+            if old_doc[property_name]['filename'] in old_doc['_attachments']:
+                return True
+        except (AttributeError, TypeError):
+            pass
+        
+    return False
+
+def _attach_updated(old_doc, new_doc, property_name):
+    """
+    >>> old_doc_no_attach = {u'title': u'Title example', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b',  u'_attachments': {u'campos lilacs_scielolivros.xls': {u'stub': True, u'length': 17408, u'revpos': 25, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
+    >>> old_doc_with_attach = {u'title': u'Title example', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'cover': {u'filename': u'campos lilacs_scielolivros.xls', u'uid': u'BCE0I1KH1Y', u'md5': u'7da75d0e101dbf5c2eec9e117ae82e58'}, u'_attachments': {u'campos lilacs_scielolivros.xls': {u'stub': True, u'length': 17408, u'revpos': 25, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
+    >>> updated_attach = {u'title': u'Title example', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'cover': {u'filename': u'updated.xls', u'uid': u'BCE0I1KH1Y', u'md5': u'7da75d0e101dbf5c2eec9e117aj32b7'}, u'_attachments': {u'updated.xls': {u'stub': True, u'length': 19408, u'revpos': 26, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
+    >>> updated_doc = {u'title': u'Title updated', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'cover': {u'filename': u'campos lilacs_scielolivros.xls', u'uid': u'BCE0I1KH1Y', u'md5': u'7da75d0e101dbf5c2eec9e117ae82e58'}, u'_attachments': {u'campos lilacs_scielolivros.xls': {u'stub': True, u'length': 17408, u'revpos': 25, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
+    >>> updated_doc_no_attach = {u'title': u'Title updated', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'_id': u'rhvkd', u'TYPE': u'Monograph'}
+    >>> _attach_updated(old_doc_no_attach, updated_attach, 'cover')
+    True
+    >>> _attach_updated(old_doc_no_attach, updated_doc, 'cover')
+    True
+    >>> _attach_updated(old_doc_with_attach, updated_attach, 'cover')
+    True
+    >>> _attach_updated(old_doc_with_attach, updated_doc, 'cover')
+    False
+    >>> _attach_updated(old_doc_no_attach, updated_doc_no_attach, 'cover')
+    False
+    >>> _attach_updated(old_doc_with_attach, updated_attach, 'title')
+    False
+    >>> _attach_updated(old_doc_with_attach, updated_doc, 'title')
+    False    
+    """
+    if _attach_exists(new_doc, property_name):
+        if not _attach_exists(old_doc, property_name):
+            return True
+        else:
+            return not new_doc[property_name]['md5'] == old_doc[property_name]['md5']
+
+    return False
+
+
 class CouchdbDocument(Document):
 
     def __init__(self, **kwargs):
@@ -61,27 +112,42 @@ class CouchdbDocument(Document):
                 
         return super(CouchdbDocument, cls).from_python(pystruct)
 
-    def save(self, db):        
-        doc = self.to_python()
-
-        doc = self.__clean_before_save(doc)
-
+    def save(self, db):
+        new_doc = self.to_python()
+        new_doc = self.__clean_before_save(new_doc)
+        
+        old_doc = db.get(new_doc['_id']) if '_rev' in new_doc else None
+                
         while True:
             try:
-                db.save_doc(doc)                                        
+                db.save_doc(new_doc)
                 break
             except couchdbkit.ResourceConflict:
                 time.sleep(0.5)
-                doc['_id'] = base28.genbase(5)
-            
+                new_doc['_id'] = base28.genbase(5)
+
         for key in self.__class__:
             prop = self.__class__.__getattribute__(self.__class__,key)
-            if isinstance(prop, FileProperty):                
-                file_dict = getattr(self,key, None)
-                if file_dict is not None:
-                    db.put_attachment(doc, file_dict['fp'], getattr(self, key)['filename'])
+            if isinstance(prop, FileProperty):
+                if old_doc is None:
+                    #Novo documento, PUT do anexo para o couchdb
+                    file_metadata = getattr(self,key, None)
+                    if file_metadata:
+                        db.put_attachment(new_doc, file_metadata['fp'], getattr(self, key)['filename'])
+                
+                elif _attach_exists(old_doc, key) and not _attach_updated(old_doc, new_doc, key):
+                    #Anexo existe e nao foi alterado
+                    #FIXME
+                    new_doc['_attachments'] = old_doc['_attachments']
+                    new_doc[key] = old_doc[key]     
+                    db.save_doc(new_doc)
+                else:
+                    #PUT do anexo para o couchdb
+                    file_metadata = getattr(self,key, None)
+                    if file_metadata:
+                        db.put_attachment(new_doc, file_metadata['fp'], getattr(self, key)['filename'])
 
-        self._id, self._rev = doc['_id'], doc['_rev']
+        self._id, self._rev = new_doc['_id'], new_doc['_rev']
     
     @classmethod
     def get(cls, db, doc_id):
@@ -103,3 +169,7 @@ class CouchdbDocument(Document):
         schema.add(id_definition)
 
         return schema
+
+if __name__=='__main__':
+    import doctest
+    doctest.testmod()
