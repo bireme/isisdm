@@ -1,3 +1,3 @@
 Example application using Isisdm to render an html form and persist
-a document in Couchdb.
+a document in Couchdb using TextProperty.
 
