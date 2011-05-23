@@ -1,0 +1,10 @@
+<html>
+	<ul>
+		<li tal:repeat="doc result">
+			<a href="view/${doc.key}" tal:attributes="title doc.value" tal:content="doc.value" title="blah">blah</a>
+		</li>
+	</ul>
+	<form name="edit" action="/insert" method="get">
+		<input type="submit"  value="Adicionar Novo" />
+	</form>
+</html>

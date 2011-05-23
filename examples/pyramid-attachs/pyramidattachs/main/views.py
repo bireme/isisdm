@@ -10,24 +10,19 @@ import Image
 import StringIO
 
 def list_entries(request):
-
-    all_docs = request.db.view('_all_docs', include_docs=True).all()
-    result = []
-    
-    for doc in all_docs:
-        doc = doc['doc']
-        result.append({'key':doc['_id'],
-                      'value':doc['title']
-                      })
+    all_docs = request.db.view('pyattachs/all_docs')        
     return render_to_response('templates/list.pt',
-                              {'result':result},
+                              {'result':all_docs.all()},
                               request=request)
     
 def view_entry(request):
-    doc = request.db.get(request.matchdict['id'])    
+    doc = request.db.get(request.matchdict['id'])
+    
+    img_url = static_url('pyramidattachs:attachments/%s/%s', request)  % (doc['_id'], doc['attachment']['filename'])
     
     return render_to_response('templates/view.pt',
                               {'title':doc['title'],
+                               'attach':img_url,
                                'about':doc['description'],
                                '_id': doc['_id']},
                               request=request)
@@ -44,12 +39,9 @@ def insert_entry(request):
             return Response(e.render())       
 
         entry = Entry.from_python(appstruct)
-        entry_id = entry.save(request.db)
+        entry.save(request.db)
         
-        return Response('''<html>
-                            <p>Inserido com sucesso sob o ID %s</p>
-                            <a href="/list">Voltar</a>
-                            ''' % entry._id)
+        return Response('Inserido com sucesso sob o ID ' + entry._id)
 
     return Response(entry_form.render())
 

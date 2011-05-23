@@ -1,0 +1,11 @@
+<html>
+	<dl>
+		<dt>Titulo:</dt><dd tal:content='title'>o titulo</dd>
+		<dt>Sobre:</dt><dd tal:content='about'>o about</dd>		
+	</dl>
+	<img tal:attributes="src attach" src="/static/images/cover.jpg"/>			
+	<form name="edit" action="/edit/${_id}" method="get">
+		<input type="submit"  value="Editar" />
+	</form>
+	<a href="/list">Voltar</a>
+</html>
