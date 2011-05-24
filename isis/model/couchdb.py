@@ -119,9 +119,16 @@ class CouchdbDocument(Document):
         self._id, self._rev = new_doc['_id'], new_doc['_rev']
     
     @classmethod
-    def get(cls, db, doc_id):
+    def get(cls, db, doc_id, controls=True):
         doc = db.get(doc_id)
-        return cls.from_python(doc)
+        couchdocument = cls.from_python(doc)
+        
+        if not controls:
+            del(couchdocument._id)
+            del(couchdocument._rev)
+
+        return couchdocument
+
 
     @classmethod
     def get_schema(cls, controls=True):
