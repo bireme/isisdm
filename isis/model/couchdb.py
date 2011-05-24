@@ -60,7 +60,10 @@ class CouchdbDocument(Document):
 
     def to_python(self):
         pstruct = super(CouchdbDocument, self).to_python()
-        pstruct['_id'] = self._id
+        try:
+            pstruct['_id'] = self._id
+        except AttributeError:
+            pass
         
         try:
             pstruct['_rev'] = self._rev
@@ -71,9 +74,10 @@ class CouchdbDocument(Document):
 
     @classmethod
     def from_python(cls, pystruct):
-        if pystruct['_id'] == 'None':
+        if pystruct.get('_id',None) == 'None':
             pystruct['_id'] = None
-        if pystruct['_rev'] == 'None':
+
+        if pystruct.get('_rev',None) == 'None':
             pystruct['_rev'] = None
                 
         return super(CouchdbDocument, cls).from_python(pystruct)
@@ -120,17 +124,19 @@ class CouchdbDocument(Document):
         return cls.from_python(doc)
 
     @classmethod
-    def get_schema(cls):
+    def get_schema(cls, controls=True):
         schema = super(CouchdbDocument, cls).get_schema()
-        rev_definition = colander.SchemaNode(colander.String(),
-                                                  widget = deform.widget.HiddenWidget(),
-                                                  default=None,
-                                                  name='_rev')
-        id_definition = colander.SchemaNode(colander.String(),
-                                                  widget = deform.widget.HiddenWidget(),
-                                                  default=None,
-                                                  name='_id')                                        
-        schema.add(rev_definition)
-        schema.add(id_definition)
+        
+        if controls:
+            rev_definition = colander.SchemaNode(colander.String(),
+                                                      widget = deform.widget.HiddenWidget(),
+                                                      default=None,
+                                                      name='_rev')
+            id_definition = colander.SchemaNode(colander.String(),
+                                                      widget = deform.widget.HiddenWidget(),
+                                                      default=None,
+                                                      name='_id')
+            schema.add(rev_definition)
+            schema.add(id_definition)
 
         return schema
