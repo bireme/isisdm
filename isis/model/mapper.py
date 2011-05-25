@@ -234,20 +234,29 @@ class CompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys=None, **kwargs):
         super(CompositeTextProperty, self).__init__(**kwargs)
-        self.subkeys = subkeys
+        if isinstance(subkeys,basestring):
+            self.subkeys = list(subkeys)
+        else:
+            self.subkeys = subkeys
 
     def __set__(self, instance, value):
-        if not isinstance(value, basestring):
-            raise TypeError('%r value must be unicode or str instance' % self.name)
+        if isinstance(value, basestring):
+            subkeys = ''.join(self.subkeys)
+            composite_text = CompositeString(value, subkeys)
+            super(CompositeTextProperty, self).__set__(instance, composite_text)
+        else:
+            try:
+                dict(value) #TODO/FIXME: change this value to an which accept __getittem__
+                super(CompositeTextProperty, self).__set__(instance, value)
+            except ValueError:
+                raise TypeError('%r value must be unicode or str instance or associative list' % self.name)
 
-        composite_text = CompositeString(value, self.subkeys)
-        super(CompositeTextProperty, self).__set__(instance, composite_text)
 
     def _pystruct(self, instance, value):
         '''
         python representation for this property
         '''
-        return value.items()
+        return value
 
     def _colander_schema(self, instance, value):
         subfield = colander.SchemaNode(colander.Tuple())
