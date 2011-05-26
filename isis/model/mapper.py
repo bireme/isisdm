@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .ordered import OrderedProperty, OrderedModel
-from .subfield import CompositeString
+from .subfield import CompositeString, CompositeTuple
 import json
 import colander
 import deform
@@ -226,33 +226,24 @@ class MultiTextProperty(CheckedProperty):
         return schema
 
 
-class CompositeTextProperty(CheckedProperty):
+class IsisCompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys=None, **kwargs):
-        super(CompositeTextProperty, self).__init__(**kwargs)
-        if isinstance(subkeys,basestring):
-            self.subkeys = list(subkeys)
-        else:
-            self.subkeys = subkeys
+        super(IsisCompositeTextProperty, self).__init__(**kwargs)
+        self.subkeys = subkeys
 
     def __set__(self, instance, value):
-        if isinstance(value, basestring):
-            subkeys = ''.join(self.subkeys)
-            composite_text = CompositeString(value, subkeys)
-            super(CompositeTextProperty, self).__set__(instance, composite_text)
-        else:
-            try:
-                dict(value) #TODO/FIXME: change this value to an which accept __getittem__
-                super(CompositeTextProperty, self).__set__(instance, value)
-            except ValueError:
-                raise TypeError('%r value must be unicode or str instance or associative list' % self.name)
+        if not isinstance(value, basestring):
+            raise TypeError('%r value must be unicode or str instance' % self.name)
 
+        composite_text = CompositeString(value, self.subkeys)
+        super(IsisCompositeTextProperty, self).__set__(instance, composite_text)
 
     def _pystruct(self, instance, value):
         '''
         python representation for this property
         '''
-        return value
+        return value.items()
 
     def _colander_schema(self, instance, value):
         subfield = colander.SchemaNode(colander.Tuple())
@@ -262,6 +253,43 @@ class CompositeTextProperty(CheckedProperty):
         return colander.SchemaNode(colander.Sequence(),
                                    subfield,
                                    name=self.name)
+
+
+class CompositeTextProperty(CheckedProperty):
+
+    def __init__(self, subkeys, **kwargs):
+        super(CompositeTextProperty, self).__init__(**kwargs)
+        if not isinstance(subkeys,tuple) and not isinstance(subkeys, list):
+            raise TypeError('subkey attribute must be tuple')
+        self.subkeys = subkeys
+
+    def __set__(self, instance, value):       
+        try:
+            value_as_dict = dict(value)
+        except ValueError:
+            raise TypeError('%r value must be a key-value structure' % self.name)
+
+        try:
+            value = CompositeTuple(value_as_dict, self.subkeys)
+        except TypeError:
+            raise TypeError('%r got an unexpected keyword' % self.name)
+
+        super(CompositeTextProperty, self).__set__(instance, value)
+
+    def _pystruct(self, instance, value):
+        '''
+        python representation for this property
+        '''
+        return value.items()
+
+    def _colander_schema(self, instance, value):
+        subfield = colander.SchemaNode(colander.Mapping(), name=self.name)
+
+        for subkey in self.subkeys:
+            subfield.add(colander.SchemaNode(colander.String(), name=subkey))
+
+        return subfield
+
 
 class MultiCompositeTextProperty(CheckedProperty):
 

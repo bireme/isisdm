@@ -27,7 +27,7 @@ Object-document mapper
     ...
     >>> class Article(Document):
     ...     title = TextProperty(required=True, validator=text_validator)
-    ...     authors = CompositeTextProperty(required=False, subkeys='fl')
+    ...     authors = IsisCompositeTextProperty(required=False, subkeys='fl')
     ...     publisher = TextProperty(required=True, validator=text_validator)
     ...
     >>> class Magazine(Document):
@@ -178,6 +178,9 @@ Colander Schema Generation::
     >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in sc.children)
     'title:String authors:Sequence pages:String'
 
+    >>> sc.serialize({'title':'My home', 'authors':['Edward','John'], 'pages':'22'}) == {'authors': [u'Edward', u'John'], 'pages': u'22', 'title': u'My home'}
+    True
+
     >>> book_with_bool_schema = BookWithBoolean.get_schema()
     >>> ' '.join('%s:%s' % (c.name, type(c.typ).__name__) for c in book_with_bool_schema.children)
     'title:String is_published:Boolean'
@@ -191,17 +194,26 @@ Hidding an attribute
 New CompositeText test
 
     >>> class OtherBook(Document):
-    ...     author = CompositeTextProperty(subkeys=['role'])
+    ...     author = CompositeTextProperty(subkeys=['name','role'])
     ...
-    >>> other = OtherBook(author=[['_','Braz, Marcelo'],['role','writer']])
-    >>> print other.author
-    [['_', 'Braz, Marcelo'], ['role', 'writer']]
+    
+    >>> other = OtherBook(author=[['name','Braz, Marcelo'],['role','writer']])
+    >>> other.author
+    CompositeTuple((('name', 'Braz, Marcelo'), ('role', 'writer')))
+    >>> print other.author['name']
+    Braz, Marcelo
+    >>> other.to_python()
+    {'TYPE': 'OtherBook', 'author': (('name', 'Braz, Marcelo'), ('role', 'writer'))}
+    
+    >>> other_schema = OtherBook.get_schema()
+    >>> other_schema.serialize({'author':{'name':'john', 'role':'writer'}}) == {'author': {'role': u'writer', 'name': u'john'}}
+    True
 
 
 """
 from isis.model import Document
 from isis.model import TextProperty, MultiTextProperty
-from isis.model import CompositeTextProperty, MultiCompositeTextProperty
+from isis.model import CompositeTextProperty, IsisCompositeTextProperty, MultiCompositeTextProperty
 from isis.model import ReferenceProperty, FileProperty, BooleanProperty
 
 def test():
