@@ -260,10 +260,10 @@ class CompositeTextProperty(CheckedProperty):
     def __init__(self, subkeys, **kwargs):
         super(CompositeTextProperty, self).__init__(**kwargs)
         if not isinstance(subkeys,tuple) and not isinstance(subkeys, list):
-            raise TypeError('subkey attribute must be tuple')
+            raise TypeError('subkeys argument must be tuple or list')
         self.subkeys = subkeys
 
-    def __set__(self, instance, value):       
+    def __set__(self, instance, value):
         try:
             value_as_dict = dict(value)
         except ValueError:
@@ -290,19 +290,18 @@ class CompositeTextProperty(CheckedProperty):
 
         return subfield
 
-
-class MultiCompositeTextProperty(CheckedProperty):
+class MultiIsisCompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys=None, **kwargs):
-        super(MultiCompositeTextProperty, self).__init__(**kwargs)
+        super(MultiIsisCompositeTextProperty, self).__init__(**kwargs)
         self.subkeys = subkeys
 
     def __set__(self, instance, value):
         if not isinstance(value, tuple):
-            raise TypeError('MultiCompositeText value must be tuple')
+            raise TypeError('MultiIsisCompositeText value must be tuple')
 
         composite_texts = tuple(CompositeString(raw_composite_text, self.subkeys) for raw_composite_text in value)
-        super(MultiCompositeTextProperty, self).__set__(instance, composite_texts)
+        super(MultiIsisCompositeTextProperty, self).__set__(instance, composite_texts)
 
     def _pystruct(self, instance, value):
         '''
@@ -312,6 +311,40 @@ class MultiCompositeTextProperty(CheckedProperty):
 
     def _colander_schema(self, instance, value):
         schema = colander.SchemaNode(colander.Tuple())
+        for subkey in self.subkeys:
+            schema.add(colander.SchemaNode(colander.String(), name=subkey))
+
+        return colander.SchemaNode(colander.Sequence(),
+                                   schema,
+                                   name=self.name)
+
+class MultiCompositeTextProperty(CheckedProperty):
+
+    def __init__(self, subkeys, **kwargs):
+        super(MultiCompositeTextProperty, self).__init__(**kwargs)
+        if not isinstance(subkeys,tuple) and not isinstance(subkeys, list):
+            raise TypeError('subkeys argument must be tuple or list')
+        self.subkeys = subkeys
+
+    def __set__(self, instance, value):
+        if not isinstance(value, tuple) and not isinstance(value, list):
+            raise TypeError('%r value must be tuple or list')
+        
+        try:
+            composite_texts = tuple(CompositeTuple(dict(composite_text), self.subkeys) for composite_text in value)            
+        except ValueError:
+            raise TypeError('%r value must be a list or tuple of key-value structures' % self.name)
+
+        super(MultiCompositeTextProperty, self).__set__(instance, composite_texts)
+
+    def _pystruct(self, instance, value):
+        '''
+        python representation for this property
+        '''
+        return tuple(composite_text.items() for composite_text in value)
+
+    def _colander_schema(self, instance, value):
+        schema = colander.SchemaNode(colander.Mapping(), name=self.name)
         for subkey in self.subkeys:
             schema.add(colander.SchemaNode(colander.String(), name=subkey))
 
