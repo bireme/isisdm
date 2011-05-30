@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .ordered import OrderedProperty, OrderedModel
-from .subfield import CompositeString, CompositeTuple
+from .subfield import CompositeString, CompositeField
 import json
 import colander
 import deform
@@ -225,6 +225,7 @@ class MultiTextProperty(CheckedProperty):
 
         return schema
 
+
 class IsisCompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys=None, **kwargs):
@@ -268,7 +269,7 @@ class CompositeTextProperty(CheckedProperty):
             raise TypeError('%r value must be a key-value structure' % self.name)
 
         try:
-            value = CompositeTuple(value_as_dict, self.subkeys)
+            value = CompositeField(value_as_dict, self.subkeys)
         except TypeError:
             raise TypeError('%r got an unexpected keyword' % self.name)
 
@@ -278,9 +279,6 @@ class CompositeTextProperty(CheckedProperty):
         '''
         python representation for this property
         '''
-        #composite_string = tuple((k, v) for k, v in value.items() if v is not None)
-        #return composite_string
-
         return value.items()
 
     def _colander_schema(self, instance, value):
@@ -336,7 +334,7 @@ class MultiCompositeTextProperty(CheckedProperty):
             raise TypeError('%r value must be tuple or list')
         
         try:
-            composite_texts = tuple(CompositeTuple(dict(composite_text), self.subkeys) for composite_text in value)            
+            composite_texts = tuple(CompositeField(dict(composite_text), self.subkeys) for composite_text in value)            
         except ValueError:
             raise TypeError('%r value must be a list or tuple of key-value structures' % self.name)
 
