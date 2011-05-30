@@ -225,7 +225,6 @@ class MultiTextProperty(CheckedProperty):
 
         return schema
 
-
 class IsisCompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys=None, **kwargs):
@@ -254,7 +253,6 @@ class IsisCompositeTextProperty(CheckedProperty):
                                    subfield,
                                    name=self.name)
 
-
 class CompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys, **kwargs):
@@ -280,13 +278,20 @@ class CompositeTextProperty(CheckedProperty):
         '''
         python representation for this property
         '''
+        #composite_string = tuple((k, v) for k, v in value.items() if v is not None)
+        #return composite_string
+
         return value.items()
 
     def _colander_schema(self, instance, value):
-        subfield = colander.SchemaNode(colander.Mapping(), name=self.name)
+        #option arg acts in each attribute
+        kwargs = {}
+        if not self.required:
+            kwargs.update({'missing':None})
 
+        subfield = colander.SchemaNode(colander.Mapping(), name=self.name)
         for subkey in self.subkeys:
-            subfield.add(colander.SchemaNode(colander.String(), name=subkey))
+            subfield.add(colander.SchemaNode(colander.String(), name=subkey, **kwargs))
 
         return subfield
 
@@ -344,13 +349,17 @@ class MultiCompositeTextProperty(CheckedProperty):
         return tuple(composite_text.items() for composite_text in value)
 
     def _colander_schema(self, instance, value):
+        kwargs = {'name':self.name}
+        if not self.required:
+            kwargs.update({'missing':None})
+
         schema = colander.SchemaNode(colander.Mapping(), name=self.name)
         for subkey in self.subkeys:
             schema.add(colander.SchemaNode(colander.String(), name=subkey))
 
         return colander.SchemaNode(colander.Sequence(),
                                    schema,
-                                   name=self.name)
+                                   **kwargs)
 
 class ReferenceProperty(CheckedProperty):
 
