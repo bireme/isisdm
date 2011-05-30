@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .ordered import OrderedProperty, OrderedModel
-from .subfield import CompositeString, CompositeTuple
+from .subfield import CompositeString, CompositeField
 import json
 import colander
 import deform
@@ -274,7 +274,7 @@ class CompositeTextProperty(CheckedProperty):
             raise TypeError('%r value must be a key-value structure' % self.name)
 
         try:
-            value = CompositeTuple(value_as_dict, self.subkeys)
+            value = CompositeField(value_as_dict, self.subkeys)
         except TypeError:
             raise TypeError('%r got an unexpected keyword' % self.name)
 

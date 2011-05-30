@@ -90,42 +90,42 @@ class CompositeString(object):
         return str(self.__isis_raw)
 
 
-class CompositeTuple(object):
+class CompositeField(object):
     ''' Represent an Isis field, with subfields, using
         Python native datastructures
 
-        >>> author = CompositeTuple( [('name','Braz, Marcelo'),('role','writer')] )
+        >>> author = CompositeField( [('name','Braz, Marcelo'),('role','writer')] )
         >>> print author['name']
         Braz, Marcelo
         >>> print author['role']
         writer
         >>> author
-        CompositeTuple((('name', 'Braz, Marcelo'), ('role', 'writer')))
+        CompositeField((('name', 'Braz, Marcelo'), ('role', 'writer')))
 
     '''
 
     def __init__(self, value, subkeys=None):
         if subkeys is None:
             subkeys = [item[0] for item in value]
-        composite = namedtuple('Composite', subkeys)
         try:
             value_as_dict = dict(value)
         except TypeError:
             raise TypeError('%r value must be a key-value structure' % self)
         
-        try:
-            self.value = composite(**value_as_dict)
-        except TypeError:
-            raise TypeError('%r got an unexpected keyword' % self)
+        for key in value_as_dict:
+            if key not in subkeys:
+                raise TypeError('Unexpected keyword %r' % key)
+    
+        self.value = tuple([(key, value_as_dict.get(key,None)) for key in subkeys])
 
     def __getitem__(self, key):
-        return getattr(self.value,key)
+        return dict(self.value)[key]
 
     def __repr__(self):
-        return "CompositeTuple(%s)" % str(self.items())
+        return "CompositeField(%s)" % str(self.items())
 
     def items(self):
-        return tuple(zip(self.value._fields, self.value))
+        return self.value
 
     def __unicode__(self):
         unicode(self.items())
