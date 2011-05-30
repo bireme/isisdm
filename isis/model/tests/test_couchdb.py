@@ -22,7 +22,7 @@ Persisting a document in CouchDB
 
     >>> class BookWithAttachment(CouchdbDocument):
     ...     title = TextProperty(required=True, validator=text_validator)
-    ...     authors = MultiCompositeTextProperty(required=False, subkeys='fl')
+    ...     authors = MultiIsisCompositeTextProperty(required=False, subkeys='fl')
     ...     cover = FileProperty()
     ...
 
@@ -91,6 +91,7 @@ _attach_exists method tests
 from isis.model import CouchdbDocument
 from isis.model import TextProperty, MultiTextProperty
 from isis.model import CompositeTextProperty, MultiCompositeTextProperty, ReferenceProperty, FileProperty
+from isis.model import IsisCompositeTextProperty, MultiIsisCompositeTextProperty
 from isis.model.couchdb import _attach_updated, _attach_exists
 import couchdbkit
 
