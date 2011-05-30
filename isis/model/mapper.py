@@ -287,10 +287,14 @@ class CompositeTextProperty(CheckedProperty):
         return value.items()
 
     def _colander_schema(self, instance, value):
-        subfield = colander.SchemaNode(colander.Mapping(), name=self.name)
+        subfield = colander.SchemaNode(colander.Mapping(), name=self.name,)
+        
+        kwargs = {}
+        if not self.required:
+            kwargs.update({'missing':None})
 
         for subkey in self.subkeys:
-            subfield.add(colander.SchemaNode(colander.String(), name=subkey))
+            subfield.add(colander.SchemaNode(colander.String(), name=subkey, **kwargs))
 
         return subfield
 
@@ -349,12 +353,18 @@ class MultiCompositeTextProperty(CheckedProperty):
 
     def _colander_schema(self, instance, value):
         schema = colander.SchemaNode(colander.Mapping(), name=self.name)
+        
+        kwargs = {}
+        if not self.required:
+            kwargs.update({'missing':None})
+        
         for subkey in self.subkeys:
-            schema.add(colander.SchemaNode(colander.String(), name=subkey))
+            schema.add(colander.SchemaNode(colander.String(), name=subkey, **kwargs))
 
         return colander.SchemaNode(colander.Sequence(),
                                    schema,
-                                   name=self.name)
+                                   name=self.name,
+                                   **kwargs)
 
 class ReferenceProperty(CheckedProperty):
 
