@@ -254,7 +254,6 @@ class IsisCompositeTextProperty(CheckedProperty):
                                    subfield,
                                    name=self.name)
 
-
 class CompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys, **kwargs):
