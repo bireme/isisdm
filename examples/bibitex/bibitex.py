@@ -10,29 +10,38 @@ from forms import BibitexForm
 import deform
 import couchdbkit
 
-
-
-def hello_world(request):
-    return Response('Hello world!')
-
-def goodbye_world(request):
-    return Response('Goodbye world!')
-
-
-def new_entry(request):
+def new(request):
     bibitex_form = BibitexForm.get_form()
-    if 'submit' in request.POST:
-        return Response('OK')
+
+    if 'submit' in request.POST:   
+        controls = request.POST.items()
+        try:
+            appstruct = bibitex_form.validate(controls)
+        except deform.ValidationFailure, e:
+            return render_to_response('bibitex:form.pt',
+              {'content': e.render()})
+
+        bibitex = Bibitex.from_python(appstruct)
+        bibitex.save(db)
+
+        return Response('Saved under id: %s' % bibitex._id)
     else:
-        return render_to_response('bibitex:template.pt',
-                                  {'content': bibitex_form.render()},
-                                  )
 
-def list_all(request):
-    pass
+        if 'id' in request.matchdict: #edit
+            bibitex = Bibitex.get(db, request.matchdict['id'])
+            
+            return render_to_response('bibitex:form.pt',
+              {'content': bibitex_form.render(bibitex.to_python())})
 
-def view_entry(request):
-    pass
+        return render_to_response('bibitex:form.pt',
+          {'content': bibitex_form.render()})
+
+
+def index(request):
+    records = db.view('_all_docs', include_docs=True)
+
+    return render_to_response('bibitex:index.pt',
+      {'records':records})
 
 
 if __name__ == '__main__':
@@ -45,10 +54,13 @@ if __name__ == '__main__':
     """Adding static views"""
     config.add_static_view('deform_static', 'deform:static')
 
-    """Adding views"""
-    config.add_view(list_all)
-    config.add_view(new_entry, name="new_entry")
-    config.add_view(view_entry, name="view_entry")
+    """Registering views and routes"""
+    config.add_view(view=index, route_name='index')
+    config.add_view(view=new, route_name='new')
+    config.add_view(view=new, route_name='edit')
+    config.add_route('index', '/')
+    config.add_route('new', '/new')
+    config.add_route('edit', '/edit/{id}')
     
     app = config.make_wsgi_app()
-    serve(app, host='0.0.0.0')
+    serve(app, host='0.0.0.0:6543')
