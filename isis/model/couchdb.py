@@ -147,7 +147,3 @@ class CouchdbDocument(Document):
             schema.add(id_definition)
 
         return schema
-
-if __name__=='__main__':
-    import doctest
-    doctest.testmod()
