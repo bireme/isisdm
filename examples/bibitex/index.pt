@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <link rel="stylesheet" href="/deform_static/css/theme.css" type="text/css"></link>
+  </head>  
+  <body>
+    <div>
+      <h1><a href="http://github.com/bireme/isisdm">ISISDM Sample Application</a></h1>
+      <p><a href="/new">add</a></p>
+      <table>
+        <tr>
+          <th>Entry type</th>
+          <th>Reference name</th>
+          <th>Title</th>
+        </tr>
+        <tr tal:repeat="record records">          
+          <td tal:content="record.doc.entry_type"></td>
+          <td tal:content="record.doc.reference_name"></td>
+          <td tal:content="record.doc.title"></td>
+          <td><a href="/edit/${record.id}">edit</a></td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
