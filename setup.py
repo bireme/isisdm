@@ -2,11 +2,15 @@ from setuptools import setup, find_packages
 import os
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.txt')).read()
-CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
+
+README_FILEPATH = os.path.join(here, 'README.txt')
+CHANGES_FILEPATH = os.path.join(here, 'CHANGES.txt')
+
+README = open(README_FILEPATH).read()
+CHANGES = open(CHANGES_FILEPATH).read()
 
 requirements = ['colander', 'deform']
-additional_files = ['README.txt', 'CHANGES.txt']
+additional_files = [README_FILEPATH, CHANGES_FILEPATH]
 
 setup(name='isisdm', version='0.2.1',
       packages=find_packages(),
