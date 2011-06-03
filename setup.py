@@ -9,7 +9,7 @@ CHANGES_FILEPATH = os.path.join(here, 'CHANGES.txt')
 README = open(README_FILEPATH).read()
 CHANGES = open(CHANGES_FILEPATH).read()
 
-requirements = ['colander', 'deform']
+requirements = ['colander', 'deform', 'couchdbkit']
 additional_files = [README_FILEPATH, CHANGES_FILEPATH]
 
 setup(name='isisdm', version='0.2.1',
