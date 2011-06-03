@@ -169,16 +169,13 @@ class FileProperty(CheckedProperty):
     def __set__(self, instance, value):
         if not isinstance(value, dict):
             raise TypeError('%r must be a dictionary' % self.name)
-              
+       
         if 'filename' not in value:
             try:
                 value['filename'] = value['fp'].name
             except AttributeError:
                 raise TypeError('%r must be a file' % self.name)
-
-        if 'fp' in value:
-            value['md5'] = hashlib.md5(value['fp'].read()).hexdigest()
-
+        
         super(FileProperty, self).__set__(instance, value)
 
     def _pystruct(self, instance, value):
@@ -187,8 +184,7 @@ class FileProperty(CheckedProperty):
         '''        
         if isinstance(value, dict):
             serializable_value = {'uid':value['uid'],
-                                  'filename':value['filename'],
-                                  'md5':value['md5'],}
+                                  'filename':value['filename'],}
             return serializable_value
 
         return value
@@ -258,7 +254,6 @@ class IsisCompositeTextProperty(CheckedProperty):
                                    subfield,
                                    name=self.name)
 
-
 class CompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys, **kwargs):
@@ -287,12 +282,12 @@ class CompositeTextProperty(CheckedProperty):
         return value.items()
 
     def _colander_schema(self, instance, value):
-        subfield = colander.SchemaNode(colander.Mapping(), name=self.name,)
-        
+        #option arg acts in each attribute
         kwargs = {}
         if not self.required:
             kwargs.update({'missing':None})
 
+        subfield = colander.SchemaNode(colander.Mapping(), name=self.name)
         for subkey in self.subkeys:
             subfield.add(colander.SchemaNode(colander.String(), name=subkey, **kwargs))
 
@@ -339,7 +334,7 @@ class MultiCompositeTextProperty(CheckedProperty):
             raise TypeError('%r value must be tuple or list')
         
         try:
-            composite_texts = tuple(CompositeTuple(dict(composite_text), self.subkeys) for composite_text in value)            
+            composite_texts = tuple(CompositeField(dict(composite_text), self.subkeys) for composite_text in value)            
         except ValueError:
             raise TypeError('%r value must be a list or tuple of key-value structures' % self.name)
 
