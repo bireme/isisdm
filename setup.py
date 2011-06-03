@@ -5,7 +5,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
-requirements = ['colander', 'deform']
+requirements = ['colander', 'deform', 'couchdbkit']
 additional_files = ['README.txt', 'CHANGES.txt']
 
 setup(name='isisdm', version='0.1.1',
