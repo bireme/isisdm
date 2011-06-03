@@ -1,3 +1,9 @@
+0.2.0
+* Added CompositeTextProperty
+* Added MultiCompositeTextProperty
+* Added IsisCompositeTextProperty
+* Added MultiIsisCompositeTextProperty
+
 0.1.1
 ---
 * Added FileProperty datatype

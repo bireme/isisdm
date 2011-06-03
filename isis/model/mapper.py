@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .ordered import OrderedProperty, OrderedModel
-from .subfield import CompositeString
+from .subfield import CompositeString, CompositeField
 import json
 import colander
 import deform
@@ -169,16 +169,13 @@ class FileProperty(CheckedProperty):
     def __set__(self, instance, value):
         if not isinstance(value, dict):
             raise TypeError('%r must be a dictionary' % self.name)
-              
+       
         if 'filename' not in value:
             try:
                 value['filename'] = value['fp'].name
             except AttributeError:
                 raise TypeError('%r must be a file' % self.name)
-
-        if 'fp' in value:
-            value['md5'] = hashlib.md5(value['fp'].read()).hexdigest()
-
+        
         super(FileProperty, self).__set__(instance, value)
 
     def _pystruct(self, instance, value):
@@ -187,8 +184,7 @@ class FileProperty(CheckedProperty):
         '''        
         if isinstance(value, dict):
             serializable_value = {'uid':value['uid'],
-                                  'filename':value['filename'],
-                                  'md5':value['md5'],}
+                                  'filename':value['filename'],}
             return serializable_value
 
         return value
@@ -230,10 +226,10 @@ class MultiTextProperty(CheckedProperty):
         return schema
 
 
-class CompositeTextProperty(CheckedProperty):
+class IsisCompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys=None, **kwargs):
-        super(CompositeTextProperty, self).__init__(**kwargs)
+        super(IsisCompositeTextProperty, self).__init__(**kwargs)
         self.subkeys = subkeys
 
     def __set__(self, instance, value):
@@ -241,7 +237,7 @@ class CompositeTextProperty(CheckedProperty):
             raise TypeError('%r value must be unicode or str instance' % self.name)
 
         composite_text = CompositeString(value, self.subkeys)
-        super(CompositeTextProperty, self).__set__(instance, composite_text)
+        super(IsisCompositeTextProperty, self).__set__(instance, composite_text)
 
     def _pystruct(self, instance, value):
         '''
@@ -258,18 +254,57 @@ class CompositeTextProperty(CheckedProperty):
                                    subfield,
                                    name=self.name)
 
-class MultiCompositeTextProperty(CheckedProperty):
+class CompositeTextProperty(CheckedProperty):
+
+    def __init__(self, subkeys, **kwargs):
+        super(CompositeTextProperty, self).__init__(**kwargs)
+        if not isinstance(subkeys,tuple) and not isinstance(subkeys, list):
+            raise TypeError('subkeys argument must be tuple or list')
+        self.subkeys = subkeys
+
+    def __set__(self, instance, value):
+        try:
+            value_as_dict = dict(value)
+        except ValueError:
+            raise TypeError('%r value must be a key-value structure' % self.name)
+
+        try:
+            value = CompositeField(value_as_dict, self.subkeys)
+        except TypeError:
+            raise TypeError('%r got an unexpected keyword' % self.name)
+
+        super(CompositeTextProperty, self).__set__(instance, value)
+
+    def _pystruct(self, instance, value):
+        '''
+        python representation for this property
+        '''
+        return value.items()
+
+    def _colander_schema(self, instance, value):
+        #option arg acts in each attribute
+        kwargs = {}
+        if not self.required:
+            kwargs.update({'missing':None})
+
+        subfield = colander.SchemaNode(colander.Mapping(), name=self.name)
+        for subkey in self.subkeys:
+            subfield.add(colander.SchemaNode(colander.String(), name=subkey, **kwargs))
+
+        return subfield
+
+class MultiIsisCompositeTextProperty(CheckedProperty):
 
     def __init__(self, subkeys=None, **kwargs):
-        super(MultiCompositeTextProperty, self).__init__(**kwargs)
+        super(MultiIsisCompositeTextProperty, self).__init__(**kwargs)
         self.subkeys = subkeys
 
     def __set__(self, instance, value):
         if not isinstance(value, tuple):
-            raise TypeError('MultiCompositeText value must be tuple')
+            raise TypeError('MultiIsisCompositeText value must be tuple')
 
         composite_texts = tuple(CompositeString(raw_composite_text, self.subkeys) for raw_composite_text in value)
-        super(MultiCompositeTextProperty, self).__set__(instance, composite_texts)
+        super(MultiIsisCompositeTextProperty, self).__set__(instance, composite_texts)
 
     def _pystruct(self, instance, value):
         '''
@@ -285,6 +320,46 @@ class MultiCompositeTextProperty(CheckedProperty):
         return colander.SchemaNode(colander.Sequence(),
                                    schema,
                                    name=self.name)
+
+class MultiCompositeTextProperty(CheckedProperty):
+
+    def __init__(self, subkeys, **kwargs):
+        super(MultiCompositeTextProperty, self).__init__(**kwargs)
+        if not isinstance(subkeys,tuple) and not isinstance(subkeys, list):
+            raise TypeError('subkeys argument must be tuple or list')
+        self.subkeys = subkeys
+
+    def __set__(self, instance, value):
+        if not isinstance(value, tuple) and not isinstance(value, list):
+            raise TypeError('%r value must be tuple or list')
+        
+        try:
+            composite_texts = tuple(CompositeField(dict(composite_text), self.subkeys) for composite_text in value)            
+        except ValueError:
+            raise TypeError('%r value must be a list or tuple of key-value structures' % self.name)
+
+        super(MultiCompositeTextProperty, self).__set__(instance, composite_texts)
+
+    def _pystruct(self, instance, value):
+        '''
+        python representation for this property
+        '''
+        return tuple(composite_text.items() for composite_text in value)
+
+    def _colander_schema(self, instance, value):
+        schema = colander.SchemaNode(colander.Mapping(), name=self.name)
+        
+        kwargs = {}
+        if not self.required:
+            kwargs.update({'missing':None})
+        
+        for subkey in self.subkeys:
+            schema.add(colander.SchemaNode(colander.String(), name=subkey, **kwargs))
+
+        return colander.SchemaNode(colander.Sequence(),
+                                   schema,
+                                   name=self.name,
+                                   **kwargs)
 
 class ReferenceProperty(CheckedProperty):
 
