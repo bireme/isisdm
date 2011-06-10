@@ -191,6 +191,21 @@ class FileProperty(CheckedProperty):
 
     def _colander_schema(self, instance, value):
         class MemoryTmpStore(dict):
+
+            def __getitem__(self, name):                
+                return self.get(name)
+            
+            def get(self, name):
+                item = super(MemoryTmpStore,self).get(name)
+                
+                if item is not None and item['fp'] is not None:
+                    if not item['fp'].read(100):
+                        item['fp'] = None
+                    else:
+                        item['fp'].seek(0)
+
+                return item
+
             def preview_url(self, name):
                 return None
         tmpstore = MemoryTmpStore()
