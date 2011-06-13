@@ -38,7 +38,7 @@ def _attach_exists(old_doc, property_name):
 
 def _attach_updated(new_doc, property_name):    
     try:
-        return new_doc[property_name] is not None
+        return new_doc[property_name]['fp'] is not None
     except KeyError:
         return False
 
