@@ -65,8 +65,8 @@ Instantiating a Book object::
 ----------------------------------------
 _attach_updated method tests
 ----------------------------------------
-   
-    >>> updated_attach = {u'title': u'Title example', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'cover': {u'filename': u'updated.xls', u'uid': u'BCE0I1KH1Y', u'md5': u'7da75d0e101dbf5c2eec9e117aj32b7'}, u'_attachments': {u'updated.xls': {u'stub': True, u'length': 19408, u'revpos': 26, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
+    >>> tmpfile = open(__file__)
+    >>> updated_attach = {u'title': u'Title example', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'cover': {u'filename': u'updated.xls', u'uid': u'BCE0I1KH1Y', u'md5': u'7da75d0e101dbf5c2eec9e117aj32b7', u'fp': tmpfile}, u'_attachments': {u'updated.xls': {u'stub': True, u'length': 19408, u'revpos': 26, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
     >>> updated_doc = {u'title': u'Title updated', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'_attachments': {u'campos lilacs_scielolivros.xls': {u'stub': True, u'length': 17408, u'revpos': 25, u'content_type': u'application/vnd.ms-excel'}}, u'_id': u'rhvkd', u'TYPE': u'Monograph'}
     >>> updated_doc_no_attach = {u'title': u'Title updated', u'_rev': u'25-9b1b088acc5d42cc9cb97bf18781811b', u'_id': u'rhvkd', u'TYPE': u'Monograph'}
     >>> _attach_updated(updated_attach, 'cover')
@@ -86,7 +86,7 @@ _attach_exists method tests
     False
     >>> _attach_exists(old_doc, 'not_exists')
     False
-    
+
 """
 from isis.model import CouchdbDocument
 from isis.model import TextProperty, MultiTextProperty

@@ -33,10 +33,10 @@ def _attach_exists(old_doc, property_name):
                 return True
         except (AttributeError, TypeError):
             pass
-        
+
     return False
 
-def _attach_updated(new_doc, property_name):    
+def _attach_updated(new_doc, property_name):
     try:
         return new_doc[property_name]['fp'] is not None
     except KeyError:
@@ -64,12 +64,12 @@ class CouchdbDocument(Document):
             pstruct['_id'] = self._id
         except AttributeError:
             pass
-        
+
         try:
             pstruct['_rev'] = self._rev
         except AttributeError:
             pass
-        
+
         return pstruct
 
     @classmethod
@@ -79,19 +79,20 @@ class CouchdbDocument(Document):
 
         if pystruct.get('_rev',None) == 'None':
             pystruct['_rev'] = None
-                
+
         return super(CouchdbDocument, cls).from_python(pystruct)
 
     def save(self, db):
         new_doc = self.to_python()
         new_doc = self.__clean_before_save(new_doc)
-        
+
         old_doc = db.get(new_doc['_id']) if '_rev' in new_doc else None
-                
+
         while True:
             try:
                 if old_doc is not None and '_attachments' in old_doc:
                     new_doc['_attachments'] = old_doc['_attachments']
+
                 db.save_doc(new_doc)
                 break
             except couchdbkit.ResourceConflict:
@@ -100,29 +101,30 @@ class CouchdbDocument(Document):
 
         for key in self.__class__:
             prop = self.__class__.__getattribute__(self.__class__,key)
-            if isinstance(prop, FileProperty):                
+            if isinstance(prop, FileProperty):
+
                 if old_doc is None:
-                    #New document                    
+                    #New document
                     file_metadata = getattr(self,key, None)
                     if file_metadata:
                         db.put_attachment(new_doc, file_metadata['fp'], getattr(self, key)['filename'])
-                elif _attach_exists(old_doc, key) and not _attach_updated(new_doc, key):
+                elif _attach_exists(old_doc, key) and not hasattr(self,key):
                     #Attachment exists and had not been changed
                     new_doc[key] = old_doc[key]
                     db.save_doc(new_doc)
                 else:
                     #Attachment updated
                     file_metadata = getattr(self,key, None)
-                    if file_metadata:
+                    if file_metadata and file_metadata.get('fp'):
                         db.put_attachment(new_doc, file_metadata['fp'], getattr(self, key)['filename'])
 
         self._id, self._rev = new_doc['_id'], new_doc['_rev']
-    
+
     @classmethod
     def get(cls, db, doc_id, controls=True):
         doc = db.get(doc_id)
         couchdocument = cls.from_python(doc)
-        
+
         if not controls:
             del(couchdocument._id)
             del(couchdocument._rev)
@@ -133,7 +135,7 @@ class CouchdbDocument(Document):
     @classmethod
     def get_schema(cls, controls=True):
         schema = super(CouchdbDocument, cls).get_schema()
-        
+
         if controls:
             rev_definition = colander.SchemaNode(colander.String(),
                                                       widget = deform.widget.HiddenWidget(),
