@@ -31,7 +31,7 @@ def _attach_exists(old_doc, property_name):
         try:
             if old_doc[property_name]['filename'] in old_doc['_attachments']:
                 return True
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError, KeyError):
             pass
 
     return False
