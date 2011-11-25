@@ -15,8 +15,12 @@ requirements = ['colander',
 additional_files = ['README.txt',
                     'CHANGES.txt']
 
-setup(name='isisdm', version='0.2.2',
+setup(name='isisdm',
+      version='0.2.3',
+      description='ISIS-DM allows programmers to express constraints and functionality similar to those of the CDS/ISIS Field Definition Table and the CDS/ISIS Formatting Language, but in contemporary, object-oriented programming languages.',
       packages=find_packages(),
+      include_package_data=True,
+      zip_safe = False,
       long_description=README + "\n\n" + CHANGES,
       namespace_packages=['isis'],
       classifiers=[
@@ -34,9 +38,6 @@ setup(name='isisdm', version='0.2.2',
       download_url='https://github.com/bireme/isisdm',
       license="LGPL v2.1 (http://www.gnu.org/licenses/lgpl-2.1.txt)",
       install_requires=requirements,
-      include_package_data=True,
       test_suite='isis.model',
       tests_require=['Nose'],
-      description='ISIS-DM allows programmers to express constraints and functionality similar to those of the CDS/ISIS Field Definition Table and the CDS/ISIS Formatting Language, but in contemporary, object-oriented programming languages.',
-      data_files=additional_files,
     )
